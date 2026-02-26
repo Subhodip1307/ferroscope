@@ -1,0 +1,4 @@
+1. cpu usage
+2. memory usage
+3. uptime
+4. kernel version

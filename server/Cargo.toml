@@ -1,0 +1,13 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+sqlx = { version = "0.8.6", features = ["runtime-tokio","postgres","macros","uuid","chrono"] }
+axum = "0.8.8"
+serde = { version = "1.0.228", features = ["derive"] }
+chrono = { version = "0.4.43", features = ["serde"] }
+tower-http = { version = "0.5", features = ["cors"] }
+uuid = { version="1.21.0" ,features = ["v4"]}
