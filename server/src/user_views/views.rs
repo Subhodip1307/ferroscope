@@ -141,7 +141,7 @@ pub(super) async fn __get_single_service_current_status(
     // will get node id and service name from query parameter or from json payload then the responce will be returnd
     let row=sqlx::query(
         "SELECT  error_msg,status,
-            CASE WHEN NOW() - updated_at - INTERVAL '5 minutes'
+            CASE WHEN updated_at < NOW() - INTERVAL '5 minutes'
             THEN 'Unreachable'
             ELSE 'Reachable'
             END AS service_status
@@ -174,8 +174,9 @@ pub(super) async fn __get_service_current_status(
     Query(params): Query<payloads::IdQuery>,
 ) -> (StatusCode, Json<Vec<get_payload::ServiceStatus>>){
     let row=sqlx::query_as::<_,get_payload::ServiceStatus>(
-        "SELECT  error_msg,status,
-            CASE WHEN NOW() - updated_at - INTERVAL '5 minutes'
+        "SELECT  error_msg,status,service_name,
+            CASE 
+            WHEN  updated_at < NOW() - INTERVAL '5 minutes'
             THEN 'Unreachable'
             ELSE 'Reachable'
             END AS service_status
