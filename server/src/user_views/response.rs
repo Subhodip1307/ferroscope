@@ -52,6 +52,7 @@ pub(super) struct SingleServiceStatus {
 
 #[derive(Debug, Serialize, sqlx::FromRow)]
 pub(super) struct ServiceStatus {
+    pub service_name:String,
     pub error_msg: String,
     pub status: String,
     pub service_status: String,
