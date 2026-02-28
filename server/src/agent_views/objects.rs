@@ -1,5 +1,5 @@
 // receive
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 
 #[derive(Deserialize, Debug)]
 pub struct CpuStats {
@@ -10,12 +10,6 @@ pub struct CpuStats {
 pub struct MemoryStats {
     pub free: String,
     pub total: String,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Cpu2Stats {
-    pub cpu: f64,
-    pub date_time: String,
 }
 
 #[derive(Deserialize, Debug)]

@@ -4,17 +4,10 @@ use crate::objects::AppState;
 use axum::{Json,extract::{Query, State},http::StatusCode};
 use chrono::{DateTime, Utc};
 use sqlx::Row;
-use axum::http::HeaderMap;
-use super::auth::auth;
 
 pub(super) async fn __get_node_list(
-    State(db_state): State<AppState>,headers: HeaderMap
-) -> Result<(StatusCode, Json<Vec<get_payload::NodesList>>),StatusCode> {
-    let (is_auth, _) = auth(headers, db_state.clone()).await;
-    if !is_auth {
-        return Err(StatusCode::UNAUTHORIZED);
-        // auth token didn't matched, still sending 200
-    }   
+    State(db_state): State<AppState>
+) -> Result<(StatusCode, Json<Vec<get_payload::NodesList>>),StatusCode> {  
     let rows: Vec<get_payload::NodesList> = sqlx::query_as("SELECT id,name FROM nodes")
         .fetch_all(&db_state.db)
         .await

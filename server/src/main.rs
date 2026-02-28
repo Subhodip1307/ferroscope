@@ -33,10 +33,6 @@ async fn main() {
         .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
         .allow_credentials(true);
 
-
-
-
-
     let pg_pool = PgPool::connect("postgres://myuser:mypassword@127.0.0.1:5432/mydatabase")
         .await
         .expect("DB connection failed");

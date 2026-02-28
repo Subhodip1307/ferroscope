@@ -8,27 +8,6 @@ use super::payloads::Login;
 use super::response::UserToken;
 use uuid::Uuid;
 
-// auth
-pub(super) async fn auth(headers: HeaderMap, db_state: AppState) -> (bool, i64) {
-    if let Some(auth) = headers.get("authorization") {
-        let auth_str = auth.to_str().unwrap();
-        let fetch_data =
-            sqlx::query("SELECT user_id FROM auth_tokens where token=$1")
-                .bind(auth_str)
-                .fetch_optional(&db_state.db)
-                .await.unwrap();
-        let out_put = match fetch_data {
-            Some(value) => (true, value.get("user_id")),
-            None => {
-                (false, 0)
-            }
-        };
-        return out_put;
-    }
-    println!("auth failed ");
-    (false, 0)
-}
-
 
 pub(super) async fn login_user(
     State(db_state): State<AppState>,
