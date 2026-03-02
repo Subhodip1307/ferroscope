@@ -8,11 +8,7 @@ services:
       POSTGRES_DB: mydatabase
       PGDATA: /var/lib/postgresql/data
     volumes:
-      - ./postgres_final:/var/lib/postgresql/data 
-    
-  project:
-    image: "ferroscope"
-    environment:
-      CORS: 
-      PSQL_URL:
-      HOST:
+      - ./postgres_final:/var/lib/postgresql/data
+
+    ports:
+      - "5432:5432"

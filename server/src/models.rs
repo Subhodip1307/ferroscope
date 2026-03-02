@@ -1,5 +1,7 @@
 // table create code
 use sqlx::PgPool;
+use std::env;
+use crate::user_views::hash_password;
 
 pub async fn create_tables(pg_pool: &PgPool) -> Result<(), sqlx::Error> {
     // creating tables
@@ -42,7 +44,7 @@ pub async fn create_tables(pg_pool: &PgPool) -> Result<(), sqlx::Error> {
         date_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         free VARCHAR(100)  NOT NULL,
         total VARCHAR(100) NOT NULL,
-        node_id BIGINT NOT NULL UNIQUE,
+        node_id BIGINT NOT NULL,
         CONSTRAINT fk_memory_nodes
                 FOREIGN KEY (node_id)
                 REFERENCES nodes(id)
@@ -131,11 +133,36 @@ pub async fn create_tables(pg_pool: &PgPool) -> Result<(), sqlx::Error> {
     ",
     )
     .execute(&mut *tx)
-    .await?;
-
-
-
-    
+    .await?;    
     tx.commit().await?;
     Ok(())
+}
+
+pub async  fn create_user_if_not_exist(pg_pool: &PgPool)-> Result<(), sqlx::Error> {
+    let mut tx = pg_pool.begin().await?;
+
+    let user_name=env::var("Username").unwrap_or_else(
+        |_|{
+            "admin".to_string()
+        }
+    );
+    let password=env::var("Password").unwrap_or_else(
+        |_|{
+            "admin".to_string()
+        }
+    );
+
+    sqlx::query(
+        "
+    insert into users (username,password_hash)
+    select $1,$2 where NOT EXISTS (  SELECT 1 FROM users); 
+    ",
+    )
+    .bind(user_name)
+    .bind(hash_password(&password))
+    .execute(&mut *tx)
+    .await?;    
+    tx.commit().await?;
+    Ok(())
+
 }

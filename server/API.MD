@@ -3,7 +3,7 @@
 Base URL:
 
 ```
-http://192.168.0.153:900/view
+<hosted_url>/view
 ```
 
 All endpoints use the **POST** method.
@@ -314,7 +314,7 @@ Returns the current status of specific service on a node.
 
 # Summary
 
-* Base URL: `http://192.168.0.153:900/view`
+* Base URL: `<hosted_url>/view`
 * All routes use POST method
 * Query parameter for node-based endpoints: `?node=<node_id>`
 * History endpoints return last 20 records only

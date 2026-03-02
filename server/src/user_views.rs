@@ -5,3 +5,4 @@ mod views;
 pub use urls::view_routers;
 mod auth;
 mod middleware;
+pub use auth::hash_password;

@@ -6,8 +6,11 @@ use super::middleware::user_auth;
 use axum::middleware::from_fn_with_state;
 
 pub fn view_routers(app_state: AppState) -> Router {
+    let public=Router::new()
+    .route("/user_login", post(__loginUser)).with_state(app_state.clone())
+    ;
+    
     let r = Router::new()
-        .route("/user_login", post(__loginUser))
         .route("/get_node_list", post(views::__get_node_list))
         .route("/get_node_info", post(views::__get_nodeinfo))
         .route("/get_latest_cpu", post(views::__get_latest_cpu))
@@ -23,4 +26,5 @@ pub fn view_routers(app_state: AppState) -> Router {
         .with_state(app_state);
 
     Router::new().nest("/view", r)
+    .nest("/auth", public)
 }

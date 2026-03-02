@@ -20,7 +20,7 @@ pub(super) async fn user_auth(
                 .fetch_optional(&db_state.db)
                 .await.unwrap();
             
-        let out_put = match fetch_data {
+        let out_put: (bool, i64) = match fetch_data {
             Some(value) => (true, value.get("user_id")),
             None => {
                 (false, 0)
