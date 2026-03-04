@@ -29,3 +29,8 @@ pub(super) struct SysInfo {
     pub cpu_threads: i16,
     pub cpu_vendor:String,
 }
+
+#[derive(Deserialize, Debug)]
+pub(super) struct UpdateUptime {
+   pub uptime_sec:i64
+}

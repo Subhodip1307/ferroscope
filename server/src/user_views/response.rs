@@ -1,6 +1,14 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
+
+#[derive(Clone,Serialize)]
+pub(super) struct AuthUser {
+    pub user_id: i64,
+    pub username:String
+}
+
+
 #[derive(Serialize)]
 pub (super) struct UserToken{
     pub token: String,
@@ -26,7 +34,7 @@ pub(super) struct SysInfo {
 
 
 #[derive(sqlx::FromRow, Debug, Serialize)]
-pub(super) struct LatestCpu {
+pub struct LatestCpu {
     pub value: f64,
     pub date_time: DateTime<Utc>,
 }

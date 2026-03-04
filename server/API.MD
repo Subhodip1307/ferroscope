@@ -310,6 +310,54 @@ Returns the current status of specific service on a node.
   "service_status":"Reachable"
 }
 ```
+
+## 11. Get User Details
+
+**Endpoint:**
+
+```
+POST /get_userdetails
+```
+
+**Description:**
+Returns the current Users Details (use for password change page)
+
+**Request Body:**
+
+```json
+{
+  "user_id": 1,
+   "username":"username"
+}
+```
+
+## 12. ChangePassword
+
+**Endpoint:**
+
+```
+POST /change_password
+```
+
+**Description:**
+Change Current Users Password and password
+
+
+**Request Body:**
+
+```json
+{
+  "username": "<old_username/new_username>",
+  "password":"new_password"
+}
+```
+
+**Response:**
+
+* `200 OK` – Credential Updated
+* `409 CONFLICT` – Not Updated
+
+
 ---
 
 # Summary

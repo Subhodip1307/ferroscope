@@ -8,6 +8,7 @@ pub fn send_routers(app_state: AppState) -> Router {
         .route("/send_cpu", post(views::__cpu_metrix))
         .route("/send_memory", post(views::__memory_metrix))
         .route("/send_service", post(views::__service_monitor))
+        .route("/send_uptime", post(views::__update_uptime))
         .with_state(app_state)
     
 }

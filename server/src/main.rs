@@ -7,12 +7,15 @@ use objects::AppState;
 mod agent_views;
 mod user_views;
 use agent_views::send_routers;
-use user_views::view_routers;
-
+use user_views::{view_routers};
 use tower_http::{cors::AllowOrigin};
 use tower_http::cors::{CorsLayer};
 use axum::http::{Method, header,header::HeaderValue};
 use std::env;
+use std::sync::Arc;
+use tokio::sync::watch;
+use chrono::{DateTime, Utc};
+use dashmap::{DashMap};
 
 #[tokio::main]
 async fn main() {
@@ -71,8 +74,7 @@ async fn main() {
         }  
     };
 
-
-    let app_state = AppState { db: pg_pool };
+    let app_state = AppState { db: pg_pool,cpu_strem:Arc::new(DashMap::new())};
 
     let app = Router::new()
         .merge(send_routers(app_state.clone()))

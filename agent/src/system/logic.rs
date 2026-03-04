@@ -5,7 +5,7 @@ use procfs::Current;
 use procfs::CurrentSI;
 use procfs::KernelStats;
 use procfs::Meminfo;
-// use procfs::Uptime;
+use procfs::Uptime;
 use std::thread::sleep;
 use std::time::Duration;
 use sysinfo::{/*Disks,*/ System};
@@ -80,11 +80,11 @@ pub fn memory_usage() -> anyhow::Result<__Memory> {
     Ok(__Memory::new(data.mem_total, data.mem_available))
 }
 
-// pub fn get_uptime() -> anyhow::Result<u64> {
-//     // returns uptime in sec
-//     let uptime = Uptime::current()?;
-//     Ok(uptime.uptime_duration().as_secs())
-// }
+pub fn get_uptime() -> anyhow::Result<u64> {
+    // returns uptime in sec
+    let uptime = Uptime::current()?;
+    Ok(uptime.uptime_duration().as_secs())
+}
 
 // pub fn current_process() -> anyhow::Result<__Cprocesses> {
 //     let kernel = KernelStats::current()?;

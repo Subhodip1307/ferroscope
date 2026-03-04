@@ -47,16 +47,18 @@ async fn main() {
     // println!("{:?}",a);
     }
     // uptime
-    // {
-    // let  uptime: HashMap<&str, u64>=HashMap::from([
-    //     ("uptime",logic::get_uptime().unwrap())
-    // ]);
-    //  reqwest::Client::new() 
-    // .post(*BASEAPI)
-    // .form(&uptime)
-    // .send()
-    // .await.unwrap();    
-    // }
+    {
+    let  uptime: HashMap<&str, u64>=HashMap::from([
+        ("uptime_sec",logic::get_uptime().unwrap())
+    ]);
+    let send_data=format!("{}/send_uptime",*BASEAPI);
+
+     reqwest::Client::new() 
+    .post(send_data)
+    .form(&uptime)
+    .send()
+    .await.unwrap();    
+    }
 
     // send memory
     {

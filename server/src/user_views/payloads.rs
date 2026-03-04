@@ -7,6 +7,13 @@ pub (super) struct Login{
 }
 
 #[derive(Deserialize)]
+pub (super) struct UsernamePasswordReset{
+    pub username:String,
+    pub password:String,
+}
+
+
+#[derive(Deserialize)]
 pub(super) struct IdQuery {
     pub node: i64,
 }

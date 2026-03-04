@@ -117,3 +117,21 @@ pub async fn __service_monitor(
     .expect("failed to insert user");
     StatusCode::OK
 }
+
+pub async fn __update_uptime( headers: HeaderMap,
+    State(db_state): State<AppState>,
+    data: Json<payload::UpdateUptime>)-> StatusCode 
+    {
+        let (is_auth, nodes_id) = auth(headers, db_state.clone()).await;
+        if !is_auth {
+        return StatusCode::OK;
+        // auth token didn't matched, still sending 200
+    }
+    sqlx::query(
+        "UPDATE sysinfo SET uptime=$1 WHERE node_id=$2"
+    )
+    .bind(data.uptime_sec)
+    .bind(nodes_id)
+    .execute(&db_state.db).await.expect("Unable to update Uptime");
+    StatusCode::OK
+    }

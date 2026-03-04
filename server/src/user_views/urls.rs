@@ -1,7 +1,7 @@
 use super::views;
 use crate::objects::AppState;
 use axum::{Router, routing::post};
-use super::auth::login_user as __loginUser;
+use super::auth::{login_user as __loginUser,__get_user_name,__change_password};
 use super::middleware::user_auth;
 use axum::middleware::from_fn_with_state;
 
@@ -19,9 +19,10 @@ pub fn view_routers(app_state: AppState) -> Router {
         .route("/ram_stat", post(views::__get_latest_ram_hisotry))
         .route("/node_services", post(views::__get_all_service_of_node))
         .route("/single_service_current_stat", post(views::__get_single_service_current_status))
-        .route("/service_current_stat",post(views::__get_service_current_status),
-    
-    )
+        .route("/service_current_stat",post(views::__get_service_current_status))
+        .route("/get_userdetails",post(__get_user_name))
+        .route("/change_password",post(__change_password))
+        
     .route_layer(from_fn_with_state(app_state.clone(), user_auth))
         .with_state(app_state);
 
