@@ -3,6 +3,7 @@ use super::objects as payload;
 use crate::objects::AppState;
 use axum::http::{HeaderMap, StatusCode};
 use axum::{Json, extract::State};
+use tokio::sync::watch;
 
 pub async fn __system_info( headers: HeaderMap,
     State(db_state): State<AppState>,
@@ -51,6 +52,7 @@ pub async fn __cpu_metrix(
     State(db_state): State<AppState>,
     data: Json<payload::CpuStats>,
 ) -> StatusCode {
+    //TODO: change cpu from f64
     println!("CPU metrix");
     let (is_auth, nodes_id) = auth(headers, db_state.clone()).await;
     if !is_auth {
@@ -63,6 +65,18 @@ pub async fn __cpu_metrix(
         .execute(&db_state.db)
         .await
         .expect("failed to insert user");
+    // putting in the stream
+    let node_key=format!("node_cpu_strem_{nodes_id}");
+    if db_state.cpu_strem.contains_key(&node_key){
+        let tx=db_state.cpu_strem.get(&node_key).unwrap();
+        let _=tx.send(data.cpu);
+    }else{
+        print!("trying here");
+        let (tx,_)=watch::channel::<f64>(data.cpu);
+        db_state.cpu_strem.insert(node_key,tx);
+    };
+
+
     StatusCode::OK
 }
 

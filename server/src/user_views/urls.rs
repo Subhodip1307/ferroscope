@@ -1,16 +1,26 @@
 use super::views;
 use crate::objects::AppState;
-use axum::{Router, routing::post};
+use axum::{Router, routing::{post,get}};
 use super::auth::{login_user as __loginUser,__get_user_name,__change_password};
 use super::middleware::user_auth;
 use axum::middleware::from_fn_with_state;
+use super::streaming;
+
+
+
+fn streaming_routers(app_state: AppState)->Router{
+    Router::new()
+    .route("/cpu", get(streaming::stream_metrics)).with_state(app_state.clone())
+
+}
+
+
 
 pub fn view_routers(app_state: AppState) -> Router {
-    let public=Router::new()
-    .route("/user_login", post(__loginUser)).with_state(app_state.clone())
-    ;
+    let auth_routers=Router::new()
+    .route("/user_login", post(__loginUser)).with_state(app_state.clone());
     
-    let r = Router::new()
+    let data_router = Router::new()
         .route("/get_node_list", post(views::__get_node_list))
         .route("/get_node_info", post(views::__get_nodeinfo))
         .route("/get_latest_cpu", post(views::__get_latest_cpu))
@@ -24,8 +34,9 @@ pub fn view_routers(app_state: AppState) -> Router {
         .route("/change_password",post(__change_password))
         
     .route_layer(from_fn_with_state(app_state.clone(), user_auth))
-        .with_state(app_state);
+        .with_state(app_state.clone());
 
-    Router::new().nest("/view", r)
-    .nest("/auth", public)
+    Router::new().nest("/view", data_router)
+    .nest("/auth", auth_routers)
+    .nest("/stream", streaming_routers(app_state))
 }
