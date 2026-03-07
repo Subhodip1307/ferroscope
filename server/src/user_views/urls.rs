@@ -10,7 +10,8 @@ use super::streaming;
 
 fn streaming_routers(app_state: AppState)->Router{
     Router::new()
-    .route("/cpu", get(streaming::stream_metrics)).with_state(app_state.clone())
+    .route("/cpu", get(streaming::stream_cpu_metrics)).with_state(app_state.clone())
+    .route("/ram", get(streaming::stream_ram_metrics)).with_state(app_state.clone())
 
 }
 

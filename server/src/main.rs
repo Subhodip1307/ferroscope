@@ -72,7 +72,7 @@ async fn main() {
         }  
     };
 
-    let app_state = AppState { db: pg_pool,cpu_strem:Arc::new(DashMap::new())};
+    let app_state = AppState { db: pg_pool,cpu_strem:Arc::new(DashMap::new()),ram_strem:Arc::new(DashMap::new())};
 
     let app = Router::new()
         .merge(send_routers(app_state.clone()))

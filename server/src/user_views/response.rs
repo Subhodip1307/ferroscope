@@ -4,10 +4,14 @@ use serde::Serialize;
 
 #[derive(Clone,Serialize)]
 pub(super) struct AuthUser {
+    pub user_id: i64
+}
+
+#[derive(Clone,Serialize)]
+pub(super) struct AuthuserIdPassword {
     pub user_id: i64,
     pub username:String
 }
-
 
 #[derive(Serialize)]
 pub (super) struct UserToken{
@@ -33,14 +37,14 @@ pub(super) struct SysInfo {
 
 
 
-#[derive(sqlx::FromRow, Debug, Serialize)]
+#[derive(sqlx::FromRow, Debug, Serialize,Clone)]
 pub struct LatestCpu {
     pub value: f64,
     pub date_time: DateTime<Utc>,
 }
 
-#[derive(sqlx::FromRow, Debug, Serialize)]
-pub(super) struct LatestRam {
+#[derive(sqlx::FromRow, Debug, Serialize,Clone)]
+pub struct LatestRam {
     pub free: String,
     pub total: String,
     pub timestamp: DateTime<Utc>,

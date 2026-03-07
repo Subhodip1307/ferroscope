@@ -19,21 +19,22 @@ pub(super) async fn user_auth(
             Err(_) => return Err(StatusCode::UNAUTHORIZED),
         };
         let fetch_data =
-            sqlx::query("SELECT u.id,u.username FROM auth_tokens a JOIN users u on a.user_id = u.id where a.token=$1")
+            sqlx::query("SELECT user_id FROM auth_tokens token=$1")
+                .persistent(true)
                 .bind(auth_str)
                 .fetch_optional(&db_state.db)
                 .await.unwrap();
             
-        let out_put: (bool, i64,String) = match fetch_data {
-            Some(value) => (true, value.get("id"),value.get("username")),
+        let out_put: (bool, i64) = match fetch_data {
+            Some(value) => (true, value.get("user_id")),
             None => {
-                (false, 0,"".to_string())
+                (false, 0)
             }
         };
         if !out_put.0{
                 return Err(StatusCode::UNAUTHORIZED);
         }
-        req.extensions_mut().insert(AuthUser{user_id:out_put.1,username:out_put.2});
+        req.extensions_mut().insert(AuthUser{user_id:out_put.1});
         let response = next.run(req).await;
         return Ok(response);
     }

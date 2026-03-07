@@ -5,7 +5,7 @@ use axum::http::{StatusCode};
 use sqlx::Row;
 use axum::{Json,extract::{State},Extension};
 use super::payloads::{Login,UsernamePasswordReset};
-use super::response::{UserToken,AuthUser};
+use super::response::{UserToken,AuthUser,AuthuserIdPassword};
 use uuid::Uuid;
 use argon2::password_hash::{SaltString, PasswordHasher,PasswordHash};
 use rand::rngs::OsRng;
@@ -68,10 +68,16 @@ pub(super) async fn login_user(
 
 
 pub(super) async fn __get_user_name(
+    State(db_state): State<AppState>,
     Extension(auth_user):Extension<AuthUser>
-)->Json<AuthUser>{
+)->Json<AuthuserIdPassword>{
+    let query=sqlx::query(
+        "SELECT username FROM users WHERE id=$1"
+    )
+    .bind(auth_user.user_id)
+    .fetch_one(&db_state.db).await.unwrap();
     // returns User name and id
-    Json(auth_user)
+    Json(AuthuserIdPassword{user_id:auth_user.user_id,username:query.get("username")})
 }
 
 

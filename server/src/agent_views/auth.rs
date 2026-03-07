@@ -8,6 +8,7 @@ pub async fn auth(headers: HeaderMap, db_state: AppState) -> (bool, i64) {
         let auth_str = auth.to_str().unwrap();
         let fetch_data =
             sqlx::query("SELECT id FROM nodes where token=$1 ORDER BY id DESC LIMIT 1")
+                .persistent(true)
                 .bind(auth_str)
                 .fetch_optional(&db_state.db)
                 .await.expect("Auth error in agent view");

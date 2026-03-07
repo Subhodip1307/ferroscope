@@ -4,6 +4,8 @@ use crate::objects::AppState;
 use axum::http::{HeaderMap, StatusCode};
 use axum::{Json, extract::State};
 use tokio::sync::watch;
+use crate::user_views::{LatestCpu,LatestRam};
+use chrono::{Utc};
 
 pub async fn __system_info( headers: HeaderMap,
     State(db_state): State<AppState>,
@@ -69,10 +71,9 @@ pub async fn __cpu_metrix(
     let node_key=format!("node_cpu_strem_{nodes_id}");
     if db_state.cpu_strem.contains_key(&node_key){
         let tx=db_state.cpu_strem.get(&node_key).unwrap();
-        let _=tx.send(data.cpu);
+        let _=tx.send(LatestCpu{ value : data.cpu,date_time:Utc::now()});
     }else{
-        print!("trying here");
-        let (tx,_)=watch::channel::<f64>(data.cpu);
+        let (tx,_)=watch::channel(LatestCpu{ value : data.cpu,date_time:Utc::now()});
         db_state.cpu_strem.insert(node_key,tx);
     };
 
@@ -98,6 +99,17 @@ pub async fn __memory_metrix(
         .execute(&db_state.db)
         .await
         .expect("failed to insert user");
+    
+
+    let node_key=format!("node_ram_strem_{nodes_id}");
+    if db_state.ram_strem.contains_key(&node_key){
+        let tx=db_state.ram_strem.get(&node_key).unwrap();
+        let _=tx.send(LatestRam{timestamp:Utc::now(),free: data.free.clone(),total:data.total.clone()});
+    }else{
+        let (tx,_)=watch::channel(LatestRam{timestamp:Utc::now(),free: data.free.clone(),total:data.total.clone()});
+        db_state.ram_strem.insert(node_key,tx);
+    };    
+
     StatusCode::OK
 }
 
