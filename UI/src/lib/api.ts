@@ -9,6 +9,8 @@ import type {
   NodeInfo,
   LoginCredentials,
   LoginResponse,
+  UserDetails,
+  ChangePasswordCredentials,
 } from "@/types";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -154,5 +156,41 @@ export const api = {
       headers: getHeaders(),
     });
     return handleResponse<NodeInfo>(response);
+  },
+
+  async getUserDetails(): Promise<UserDetails | null> {
+    const response = await fetch(`${API_URL}/get_userdetails`, {
+      method: "POST",
+      headers: getHeaders(),
+    });
+    return handleResponse<UserDetails>(response);
+  },
+
+  async changePassword(credentials: ChangePasswordCredentials): Promise<boolean> {
+    const response = await fetch(`${API_URL}/change_password`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(credentials),
+    });
+
+    if (response.status === 200) return true;
+    if (response.status === 409) return false;
+
+    // Fallback for other errors handled by handleResponse logic or similar
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `API error: ${response.status}`);
+    }
+    return true;
+  },
+
+  getCPUStreamUrl(nodeId: number): string {
+    const streamBase = API_URL?.replace("/view", "/stream") || "";
+    return `${streamBase}/cpu?node=${nodeId}`;
+  },
+
+  getRAMStreamUrl(nodeId: number): string {
+    const streamBase = API_URL?.replace("/view", "/stream") || "";
+    return `${streamBase}/ram?node=${nodeId}`;
   },
 };

@@ -25,16 +25,10 @@ export function RAMChart({ nodeId, nodeName }: RAMChartProps) {
   const [data, setData] = useState<RAMData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const ramHistory = await api.getRAMHistory(nodeId);
-      console.log("RAM History:", ramHistory);
-      console.log("Sample parsed:", {
-        total: parseRAM(ramHistory[0]?.total),
-        free: parseRAM(ramHistory[0]?.free),
-        used: parseRAM(ramHistory[0]?.total) - parseRAM(ramHistory[0]?.free),
-      });
-      setData(ramHistory);
+      setData(ramHistory.slice(0, 20));
     } catch (error) {
       console.error("Error fetching RAM history:", error);
     } finally {
@@ -43,10 +37,39 @@ export function RAMChart({ nodeId, nodeName }: RAMChartProps) {
   }, [nodeId]);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    fetchHistory();
+
+    // Connect to SSE for real-time updates
+    const streamUrl = api.getRAMStreamUrl(nodeId);
+    const eventSource = new EventSource(streamUrl);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const newData = JSON.parse(event.data);
+        const formattedPoint: RAMData = {
+          free: newData.free,
+          total: newData.total,
+          timestamp: newData.timestamp
+        };
+
+        setData(prevData => {
+          // Keep only last 20 points
+          const updated = [formattedPoint, ...prevData];
+          return updated.slice(0, 20);
+        });
+      } catch (err) {
+        console.error("Error parsing RAM stream data:", err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("RAM SSE Error:", err);
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [fetchHistory, nodeId]);
 
   // ✅ spread first to avoid mutating state array
   const chartData = [...data].reverse().map((item) => ({
@@ -56,7 +79,7 @@ export function RAMChart({ nodeId, nodeName }: RAMChartProps) {
     total: parseRAM(item.total),
   }));
 
-  console.log("chartData:", chartData); 
+  console.log("chartData:", chartData);
 
   // ✅ guard against empty array — Math.max(...[]) = -Infinity
   const maxTotal =

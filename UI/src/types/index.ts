@@ -43,6 +43,16 @@ export interface LoginResponse {
   token: string;
 }
 
+export interface UserDetails {
+  user_id: number;
+  username: string;
+}
+
+export interface ChangePasswordCredentials {
+  username: string;
+  password: string;
+}
+
 // ─── Raw API Response Shapes ──────────────────────────────────────────────────
 export interface CPUStatRaw {
   value: number;
