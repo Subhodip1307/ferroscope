@@ -67,7 +67,7 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess, initialUsernam
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100]"
+                        className="fixed inset-0 bg-black/70 z-[100]"
                     />
 
                     {/* Modal Container */}
