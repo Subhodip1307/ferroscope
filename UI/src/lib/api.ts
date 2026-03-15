@@ -14,8 +14,19 @@ import type {
 } from "@/types";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL;
+const getApiUrl = () => {
+  if (typeof window !== 'undefined' && (window as any).__ENV__?.API_URL) {
+    return (window as any).__ENV__.API_URL;
+  }
+  return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
+};
+
+const getAuthUrl = () => {
+  if (typeof window !== 'undefined' && (window as any).__ENV__?.AUTH_URL) {
+    return (window as any).__ENV__.AUTH_URL;
+  }
+  return process.env.AUTH_URL || process.env.NEXT_PUBLIC_AUTH_URL || '';
+};
 
 const getHeaders = () => {
   const token =
@@ -54,7 +65,7 @@ const handleResponse = async <T>(
 // ─── API ──────────────────────────────────────────────────────────────────────
 export const api = {
   async getNodes(): Promise<Node[]> {
-    const response = await fetch(`${API_URL}/get_node_list`, {
+    const response = await fetch(`${getApiUrl()}/get_node_list`, {
       method: "POST",
       headers: getHeaders(),
     });
@@ -62,7 +73,7 @@ export const api = {
   },
 
   async getLatestCPU(nodeId: number): Promise<CPUData> {
-    const response = await fetch(`${API_URL}/get_latest_cpu?node=${nodeId}`, {
+    const response = await fetch(`${getApiUrl()}/get_latest_cpu?node=${nodeId}`, {
       method: "POST",
       headers: getHeaders(),
     });
@@ -79,7 +90,7 @@ export const api = {
   },
 
   async getLatestRAM(nodeId: number): Promise<RAMData | null> {
-    const response = await fetch(`${API_URL}/get_latest_ram?node=${nodeId}`, {
+    const response = await fetch(`${getApiUrl()}/get_latest_ram?node=${nodeId}`, {
       method: "POST",
       headers: getHeaders(),
     });
@@ -87,7 +98,7 @@ export const api = {
   },
 
   async getCPUHistory(nodeId: number): Promise<CPUData[]> {
-    const response = await fetch(`${API_URL}/cpu_stat?node=${nodeId}`, {
+    const response = await fetch(`${getApiUrl()}/cpu_stat?node=${nodeId}`, {
       method: "POST",
       headers: getHeaders(),
     });
@@ -101,7 +112,7 @@ export const api = {
   },
 
   async getRAMHistory(nodeId: number): Promise<RAMData[]> {
-    const response = await fetch(`${API_URL}/ram_stat?node=${nodeId}`, {
+    const response = await fetch(`${getApiUrl()}/ram_stat?node=${nodeId}`, {
       method: "POST",
       headers: getHeaders(),
     });
@@ -116,7 +127,7 @@ export const api = {
   },
 
   async getNodeServices(nodeId: number): Promise<Service[]> {
-    const response = await fetch(`${API_URL}/node_services?node=${nodeId}`, {
+    const response = await fetch(`${getApiUrl()}/node_services?node=${nodeId}`, {
       method: "POST",
       headers: getHeaders(),
     });
@@ -125,7 +136,7 @@ export const api = {
 
   async getServiceStatus(nodeId: number): Promise<ServiceStatus[]> {
     const response = await fetch(
-      `${API_URL}/service_current_stat?node=${nodeId}`,
+      `${getApiUrl()}/service_current_stat?node=${nodeId}`,
       {
         method: "POST",
         headers: getHeaders(),
@@ -137,7 +148,7 @@ export const api = {
   async userLogin(
     credentials: LoginCredentials,
   ): Promise<LoginResponse | null> {
-    const response = await fetch(`${AUTH_URL}/user_login`, {
+    const response = await fetch(`${getAuthUrl()}/user_login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -151,7 +162,7 @@ export const api = {
   },
 
   async getNodeInfo(nodeId: number): Promise<NodeInfo | null> {
-    const response = await fetch(`${API_URL}/get_node_info?node=${nodeId}`, {
+    const response = await fetch(`${getApiUrl()}/get_node_info?node=${nodeId}`, {
       method: "POST",
       headers: getHeaders(),
     });
@@ -159,7 +170,7 @@ export const api = {
   },
 
   async getUserDetails(): Promise<UserDetails | null> {
-    const response = await fetch(`${API_URL}/get_userdetails`, {
+    const response = await fetch(`${getApiUrl()}/get_userdetails`, {
       method: "POST",
       headers: getHeaders(),
     });
@@ -167,7 +178,7 @@ export const api = {
   },
 
   async changePassword(credentials: ChangePasswordCredentials): Promise<boolean> {
-    const response = await fetch(`${API_URL}/change_password`, {
+    const response = await fetch(`${getApiUrl()}/change_password`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(credentials),
@@ -185,12 +196,21 @@ export const api = {
   },
 
   getCPUStreamUrl(nodeId: number): string {
-    const streamBase = API_URL?.replace("/view", "/stream") || "";
+    const streamBase = getApiUrl()?.replace("/view", "/stream") || "";
     return `${streamBase}/cpu?node=${nodeId}`;
   },
 
   getRAMStreamUrl(nodeId: number): string {
-    const streamBase = API_URL?.replace("/view", "/stream") || "";
+    const streamBase = getApiUrl()?.replace("/view", "/stream") || "";
     return `${streamBase}/ram?node=${nodeId}`;
+  },
+
+  async createNode(name: string): Promise<{ token: string } | null> {
+    const response = await fetch(`${getApiUrl()}/create_nodes`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ name }),
+    });
+    return handleResponse<{ token: string }>(response);
   },
 };

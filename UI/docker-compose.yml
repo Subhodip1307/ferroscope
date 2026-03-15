@@ -2,3 +2,8 @@ services:
   project:
     image: ferro_font
     restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=
+      - AUTH_URL=

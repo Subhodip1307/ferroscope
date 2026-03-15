@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: "Real-time system monitoring dashboard",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: {
@@ -18,6 +20,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__ENV__ = ${JSON.stringify({
+              API_URL: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "",
+              AUTH_URL: process.env.AUTH_URL || process.env.NEXT_PUBLIC_AUTH_URL || ""
+            })};`,
+          }}
+        />
+      </head>
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
