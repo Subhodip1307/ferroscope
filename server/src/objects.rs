@@ -10,5 +10,5 @@ pub struct AppState {
     pub db: PgPool,
     pub cpu_strem: Arc<DashMap<String, Sender<LatestCpu>>>,
     pub ram_strem: Arc<DashMap<String, Sender<LatestRam>>>,
-    pub cache: Cache<String, i64>,
+    pub cache: Cache<String, i64>, //cache to store i64
 }
