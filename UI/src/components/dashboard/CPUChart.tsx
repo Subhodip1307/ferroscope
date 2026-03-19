@@ -16,6 +16,7 @@ interface CPUChartProps {
 export function CPUChart({ nodeId, nodeName }: CPUChartProps) {
   const [data, setData] = useState<CPUData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     fetchHistory();
@@ -26,6 +27,7 @@ export function CPUChart({ nodeId, nodeName }: CPUChartProps) {
 
     eventSource.onmessage = (event) => {
       try {
+        setIsOffline(false);
         const newData = JSON.parse(event.data);
         const formattedPoint: CPUData = {
           cpu: newData.value,
@@ -43,8 +45,7 @@ export function CPUChart({ nodeId, nodeName }: CPUChartProps) {
     };
 
     eventSource.onerror = (err) => {
-      console.error("CPU SSE Error:", err);
-      // EventSource automatically tries to reconnect, but we log it
+      setIsOffline(true);
     };
 
     return () => {
@@ -56,8 +57,12 @@ export function CPUChart({ nodeId, nodeName }: CPUChartProps) {
     try {
       const cpuHistory = await api.getCPUHistory(nodeId);
       setData(cpuHistory.slice(0, 20)); // Initial state with last 20 points
-    } catch (error) {
+      setIsOffline(false);
+    } catch (error: any) {
       console.error("Error fetching CPU history:", error);
+      if (error.message?.includes("503")) {
+        setIsOffline(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -83,6 +88,13 @@ export function CPUChart({ nodeId, nodeName }: CPUChartProps) {
           {loading ? (
             <div className="h-[300px] flex items-center justify-center">
               <div className="animate-pulse text-muted-foreground">Loading chart...</div>
+            </div>
+          ) : isOffline ? (
+            <div className="h-[300px] flex flex-col items-center justify-center space-y-2">
+              <div className="text-destructive font-semibold">Node Offline</div>
+              <div className="text-muted-foreground text-sm text-center px-4">
+                Wait for the node to come back online for real-time data.
+              </div>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
