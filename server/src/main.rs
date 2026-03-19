@@ -28,9 +28,9 @@ async fn main() {
 
     #[cfg(debug_assertions)]
     let allowed_origins = [
-        HeaderValue::from_static("http://localhost:3001"),
-        HeaderValue::from_static("http://127.0.0.1:3001"),
-        HeaderValue::from_static("http://192.168.0.161:3001"),
+        HeaderValue::from_static("http://localhost:3000"),
+        HeaderValue::from_static("http://127.0.0.1:3000"),
+        HeaderValue::from_static("http://192.168.0.161:3000"),
     ];
 
     let cors = CorsLayer::new()
@@ -45,7 +45,7 @@ async fn main() {
         .unwrap();
 
     #[cfg(debug_assertions)]
-    let pg_pool = PgPool::connect("postgres://myuser:mypassword@127.0.0.1:5432/mydatabase")
+    let pg_pool = PgPool::connect("postgres://myuser:mypassword@127.0.0.1:5433/mydatabase")
         .await
         .unwrap();
 
@@ -87,10 +87,15 @@ async fn main() {
         .merge(view_routers(app_state))
         .layer(cors);
 
+    
+
+
+    let host=env::var("HOST").unwrap_or("0.0.0.0:8000".to_string());
+    
     let listener =
-        tokio::net::TcpListener::bind(env::var("HOST").unwrap_or("0.0.0.0:8000".to_string()))
+        tokio::net::TcpListener::bind(&host)
             .await
             .unwrap();
-    println!("runing");
+    println!("runing on {}",host);
     axum::serve(listener, app).await.unwrap();
 }

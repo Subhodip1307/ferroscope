@@ -299,10 +299,12 @@ node=<node_id>
 ```json
 [
   {
-    "service_name": "nginx"
+    "service_name": "nginx",
+    "category":"<Host/Web>"
   },
   {
-    "service_name": "postgres"
+    "service_name": "postgres",
+    "category":"<Host/Web>"
   }
 ]
 ```
@@ -324,7 +326,7 @@ POST /view/single_service_current_stat
 ```json
 {
   "node": 1,
-  "service_name": "nginx"
+  "service_name": "nginx",
 }
 ```
 
@@ -334,7 +336,9 @@ POST /view/single_service_current_stat
 {
   "status": "running",
   "service_status": "Reachable",
-  "error_msg": ""
+  "error_msg": "",
+  "category":"<Host/Web>",
+  "ssl_exp":"null_or_utc_time"
 }
 ```
 
@@ -379,13 +383,17 @@ node=<node_id>
     "service_name": "nginx",
     "status": "running",
     "service_status": "Reachable",
-    "error_msg": ""
+    "error_msg": "",
+    "category":"Host",
+    "ssl_exp":null
   },
   {
     "service_name": "postgres",
     "status": "running",
     "service_status": "Reachable",
-    "error_msg": ""
+    "error_msg": "",
+    "category":"Web",
+    "ssl_exp":"utc_time"
   }
 ]
 ```

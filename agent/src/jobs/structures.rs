@@ -1,10 +1,13 @@
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 // base Format
 #[derive(Debug, Serialize)]
 pub(super) struct BaseFormat {
     pub service_name: String,
     pub status: String, //runing or dead
     pub error_msg: String,
+    pub category: String,
+    pub ssl_exp: Option<OffsetDateTime>,
 }
 
 /*..............host checking ..................

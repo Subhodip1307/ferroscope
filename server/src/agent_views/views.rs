@@ -50,13 +50,28 @@ pub async fn __cpu_metrix(
     State(db_state): State<AppState>,
     data: Json<payload::CpuStats>,
 ) -> StatusCode {
-    //TODO: change cpu from f64
-    sqlx::query("INSERT INTO cpu_stats (value,node_id) VALUES ($1,$2)")
+
+    let cpu_node_key=format!("node_cpu_metrix_{}",nodes_id);
+    println!("getting cpu");
+    
+    // if not in the cache key then insert or don't
+    // in future will use differnt cache builder for ttl tuneing
+    if !db_state.cache.contains_key(&cpu_node_key){
+        println!("Enteriing cpu");
+
+        //TODO: change cpu from f64
+        sqlx::query("INSERT INTO cpu_stats (value,node_id) VALUES ($1,$2)")
         .bind(data.cpu)
         .bind(nodes_id)
         .execute(&db_state.db)
         .await
         .expect("failed to insert user");
+        
+        // adding to cache
+        db_state.cache.insert(cpu_node_key, 0);//will be there for 5min until that no data entry
+    };
+
+    
     // putting in the stream
     let node_key = format!("node_cpu_strem_{nodes_id}");
     if db_state.cpu_strem.contains_key(&node_key) {
@@ -82,6 +97,13 @@ pub async fn __memory_metrix(
     data: Json<payload::MemoryStats>,
 ) -> StatusCode {
     println!("Memory metrix");
+
+    let ram_node_key=format!("node_ram_metrix_{}",nodes_id);
+
+
+
+    if !db_state.cache.contains_key(&ram_node_key){
+    println!("Enteriing ram");
     sqlx::query("INSERT INTO memory_metrics (free,total,node_id) VALUES ($1,$2,$3)")
         .bind(&data.free)
         .bind(&data.total)
@@ -89,6 +111,10 @@ pub async fn __memory_metrix(
         .execute(&db_state.db)
         .await
         .expect("failed to insert user");
+        // inserting the cache
+        db_state.cache.insert(ram_node_key,0);
+    }
+
 
     let node_key = format!("node_ram_strem_{nodes_id}");
     if db_state.ram_strem.contains_key(&node_key) {
@@ -117,11 +143,13 @@ pub async fn __service_monitor(
 ) -> StatusCode {
     println!("Service Monitor");
     sqlx::query(
-        "INSERT INTO service_monitor (service_name,status,error_msg,node_id) VALUES ($1,$2,$3,$4)
+        "INSERT INTO service_monitor (service_name,status,error_msg,node_id,category,ssl_exp) VALUES ($1,$2,$3,$4,$5,$6)
         ON CONFLICT (node_id,service_name)
         DO UPDATE SET   
             status = EXCLUDED.status,
             error_msg = EXCLUDED.error_msg,
+            category = EXCLUDED.category,
+            ssl_exp = EXCLUDED.ssl_exp,
             updated_at = NOW();
         ",
     )
@@ -129,6 +157,8 @@ pub async fn __service_monitor(
     .bind(&data.status)
     .bind(&data.error_msg)
     .bind(nodes_id)
+    .bind(&data.category)
+    .bind(&data.ssl_exp)
     .execute(&db_state.db)
     .await
     .expect("failed to insert user");

@@ -51,11 +51,11 @@ pub fn total_cpu_usage() -> anyhow::Result<f64> {
 
     if total_delta <= 0.0 {
         println!("Could not compute CPU usage (no change in counters)."); //need to fix this can't return 0.0 
-        return Ok(0.0);
+        Ok(0.0)
     } else {
         let usage_frac = 1.0 - (idle_delta / total_delta);
         println!("CPU usage: {:.2}%", usage_frac * 100.0);
-        return Ok(usage_frac);
+        Ok(usage_frac)
     }
 }
 

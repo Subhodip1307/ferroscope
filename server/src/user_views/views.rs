@@ -9,6 +9,7 @@ use axum::{
 use chrono::{DateTime, Utc};
 use sqlx::Row;
 use uuid::Uuid;
+use std::collections::HashMap;
 
 pub(super) async fn __get_node_list(
     State(db_state): State<AppState>,
@@ -119,14 +120,23 @@ pub(super) async fn __get_latest_ram_hisotry(
 pub(super) async fn __get_all_service_of_node(
     State(db_state): State<AppState>,
     Query(params): Query<payloads::IdQuery>,
-) -> (StatusCode, Json<Vec<get_payload::ServiceList>>) {
-    let row: Vec<get_payload::ServiceList> =
-        sqlx::query_as("SELECT  DISTINCT service_name FROM service_monitor where node_id = $1")
+) -> (StatusCode, Json<HashMap<String, Vec<get_payload::ServiceList>>>) {
+    // TODO: Update this code DOCS/ or remove it
+    let rows: Vec<get_payload::ServiceList> =
+        sqlx::query_as("SELECT service_name,category,ssl_exp FROM service_monitor where node_id = $1")
             .bind(params.node)
             .fetch_all(&db_state.db)
             .await
             .unwrap();
-    (StatusCode::OK, Json(row))
+
+    let mut grouped: HashMap<String, Vec<get_payload::ServiceList>> = HashMap::new();
+    for service in rows {
+        grouped
+            .entry(service.category.clone())
+            .or_insert_with(Vec::new)
+            .push(service);
+    }
+    (StatusCode::OK, Json(grouped))
 }
 
 pub(super) async fn __get_single_service_current_status(
@@ -135,7 +145,7 @@ pub(super) async fn __get_single_service_current_status(
 ) -> Result<(StatusCode, Json<get_payload::SingleServiceStatus>), StatusCode> {
     // will get node id and service name from query parameter or from json payload then the responce will be returnd
     let row = sqlx::query(
-        "SELECT  error_msg,status,
+        "SELECT  error_msg,status,category,ssl_exp
             CASE WHEN updated_at < NOW() - INTERVAL '5 minutes'
             THEN 'Unreachable'
             ELSE 'Reachable'
@@ -151,12 +161,14 @@ pub(super) async fn __get_single_service_current_status(
         let error_msg = value.get("error_msg");
         let status = value.get("status");
         let service_status = value.get("service_status");
+        let category = value.get("category");
+        let ssl_exp = value.get("ssl_exp");
         return Ok((
             StatusCode::OK,
             Json(get_payload::SingleServiceStatus {
                 status,
                 error_msg,
-                service_status,
+                service_status,category,ssl_exp
             }),
         ));
     }
@@ -166,9 +178,9 @@ pub(super) async fn __get_single_service_current_status(
 pub(super) async fn __get_service_current_status(
     State(db_state): State<AppState>,
     Query(params): Query<payloads::IdQuery>,
-) -> (StatusCode, Json<Vec<get_payload::ServiceStatus>>) {
-    let row = sqlx::query_as::<_, get_payload::ServiceStatus>(
-        "SELECT  error_msg,status,service_name,
+) -> (StatusCode, Json<HashMap<String, Vec<get_payload::ServiceStatus>>>) {
+    let rows = sqlx::query_as::<_, get_payload::ServiceStatus>(
+        "SELECT  error_msg,status,service_name,category,ssl_exp,
             CASE 
             WHEN  updated_at < NOW() - INTERVAL '5 minutes'
             THEN 'Unreachable'
@@ -181,7 +193,15 @@ pub(super) async fn __get_service_current_status(
     .await
     .unwrap();
 
-    (StatusCode::OK, Json(row))
+    let mut grouped: HashMap<String, Vec<get_payload::ServiceStatus>> = HashMap::new();
+    for service in rows {
+        grouped
+            .entry(service.category.clone())
+            .or_insert_with(Vec::new)
+            .push(service);
+    }
+
+    (StatusCode::OK, Json(grouped))
 }
 
 pub(super) async fn __create_node(

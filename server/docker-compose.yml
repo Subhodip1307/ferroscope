@@ -1,6 +1,6 @@
 services:
   database:
-    image: postgres:18
+    image: postgres:18.3
     shm_size: 512mb
     environment:
       POSTGRES_USER: myuser
@@ -11,8 +11,10 @@ services:
       - ./postgres_final:/var/lib/postgresql/data 
     
   project:
-    image: "ferroscope"
+    image: "ferroscope-test"
     environment:
-      CORS: 
-      PSQL_URL:
-      HOST:
+      CORS: "http://localhost:3000,http://127.0.0.1:3000"
+      PSQL_URL: postgres://myuser:mypassword@database:5432/mydatabase
+    user: "scope:scope"
+    ports:
+      - "8000:8000"

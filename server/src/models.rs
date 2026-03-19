@@ -1,5 +1,5 @@
 // table create code
-use crate::user_views::hash_password;
+use ferroscope_server::hash_password;
 use sqlx::PgPool;
 use std::env;
 
@@ -63,6 +63,8 @@ pub async fn create_tables(pg_pool: &PgPool) -> Result<(), sqlx::Error> {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         service_name VARCHAR(250)  NOT NULL,
         status VARCHAR(100) NOT NULL,
+        ssl_exp TIMESTAMPTZ,
+        category VARCHAR(50) NOT NULL,
         error_msg VARCHAR(300),
         node_id BIGINT NOT NULL,
         CONSTRAINT fk_memory_nodes
@@ -80,6 +82,7 @@ pub async fn create_tables(pg_pool: &PgPool) -> Result<(), sqlx::Error> {
     // status = Runing/Dead #make it bool
     // error_msg= error message if any
     // //creating User table
+    //  ssl_expiry is only for web
     sqlx::query(
         "
     CREATE TABLE IF NOT EXISTS users (

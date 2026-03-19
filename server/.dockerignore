@@ -2,3 +2,6 @@ postgres_final/
 API.MD
 docker-compose.yml
 dev-compose.yml
+target/
+.dockerignore
+.gitignore
