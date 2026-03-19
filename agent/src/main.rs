@@ -45,40 +45,36 @@ async fn main() {
     }
     // cpu
     {
-    let system_conf: Arc<set_up::BaseConFig>=conf.clone();
-    let system_api_client: Arc<Client>=api_client.clone();
-    tokio::spawn(async move {
-        let mut tick=interval(Duration::from_secs(system_conf.get_cpu_interval()));
-        loop{
-            system::send_cpu(system_conf.clone(),system_api_client.clone()).await;
-            println!("cpu send");
-            tick.tick().await;
-        }
-    });
+        let system_conf: Arc<set_up::BaseConFig> = conf.clone();
+        let system_api_client: Arc<Client> = api_client.clone();
+        tokio::spawn(async move {
+            let mut tick = interval(Duration::from_secs(system_conf.get_cpu_interval()));
+            loop {
+                system::send_cpu(system_conf.clone(), system_api_client.clone()).await;
+                println!("cpu send");
+                tick.tick().await;
+            }
+        });
     }
     // Ram
-    {let system_conf: Arc<set_up::BaseConFig>=conf.clone();
-    let system_api_client: Arc<Client>=api_client.clone();
-    tokio::spawn(async move {
-        let mut tick=interval(Duration::from_secs(system_conf.get_ram_interval()));
-        loop{
-            system::send_memory(system_conf.clone(),system_api_client.clone()).await;
-            tick.tick().await;
-        }
-    });}
+    {
+        let system_conf: Arc<set_up::BaseConFig> = conf.clone();
+        let system_api_client: Arc<Client> = api_client.clone();
+        tokio::spawn(async move {
+            let mut tick = interval(Duration::from_secs(system_conf.get_ram_interval()));
+            loop {
+                system::send_memory(system_conf.clone(), system_api_client.clone()).await;
+                tick.tick().await;
+            }
+        });
+    }
     // uptime
-    let system_conf: Arc<set_up::BaseConFig>=conf.clone();
-    let system_api_client: Arc<Client>=api_client.clone();
-    
-    let mut tick=interval(Duration::from_secs(system_conf.get_uptime_interval()));
-    loop{
-        system::send_uptime(system_conf.clone(),system_api_client.clone()).await;
+    let system_conf: Arc<set_up::BaseConFig> = conf.clone();
+    let system_api_client: Arc<Client> = api_client.clone();
+
+    let mut tick = interval(Duration::from_secs(system_conf.get_uptime_interval()));
+    loop {
+        system::send_uptime(system_conf.clone(), system_api_client.clone()).await;
         tick.tick().await;
     }
-    
-
-
 }
-
-
-

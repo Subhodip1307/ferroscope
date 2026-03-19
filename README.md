@@ -17,7 +17,7 @@ FerroScope is built with a focus on:
 
 The Ferroscope server exposes a **public API**, allowing developers to build their own monitoring dashboards, automation tools, or integrations.
 
-For API usage and integration details, see the **[API Documentation](API-DOCS/index.md)**.
+For API usage and integration details, see the **[API Documentation](API-DOCS/README.md)**.
 
 ---
 

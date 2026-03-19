@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
+use time::OffsetDateTime;
 
 #[derive(Clone, Serialize)]
 pub(super) struct AuthUser {
@@ -49,7 +50,9 @@ pub struct LatestRam {
 
 #[derive(sqlx::FromRow, Debug, Serialize)]
 pub(super) struct ServiceList {
-    service_name: String,
+    pub service_name: String,
+    pub category:String,
+    pub ssl_exp:Option<OffsetDateTime>,
 }
 
 #[derive(Debug, Serialize)]
@@ -57,6 +60,8 @@ pub(super) struct SingleServiceStatus {
     pub status: String,
     pub service_status: String,
     pub error_msg: String,
+    pub category:String,
+    pub ssl_exp:Option<OffsetDateTime>,
 }
 
 #[derive(Debug, Serialize, sqlx::FromRow)]
@@ -64,5 +69,6 @@ pub(super) struct ServiceStatus {
     pub service_name: String,
     pub error_msg: String,
     pub status: String,
-    pub service_status: String,
+    pub category:String,
+    pub ssl_exp:Option<OffsetDateTime>,
 }

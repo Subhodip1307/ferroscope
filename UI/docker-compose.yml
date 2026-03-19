@@ -1,6 +1,6 @@
 services:
   project:
-    image: ferro_font
+    image: ferroscope-ui
     restart: always
     ports:
       - "3000:3000"

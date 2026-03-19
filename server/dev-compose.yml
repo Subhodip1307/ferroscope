@@ -1,6 +1,6 @@
 services:
   database:
-    image: postgres:18
+    image: postgres:18.3
     shm_size: 512mb
     environment:
       POSTGRES_USER: myuser
@@ -11,4 +11,4 @@ services:
       - ./postgres_final:/var/lib/postgresql/data
 
     ports:
-      - "5432:5432"
+      - "5433:5432"

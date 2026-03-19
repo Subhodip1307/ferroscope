@@ -1,5 +1,6 @@
 // receive
 use serde::Deserialize;
+use time::OffsetDateTime;
 
 #[derive(Deserialize, Debug)]
 pub struct CpuStats {
@@ -17,6 +18,8 @@ pub struct ServiceMonitor {
     pub service_name: String,
     pub status: String, //runing or dead
     pub error_msg: Option<String>,
+    pub category: String,
+    pub ssl_exp:Option<OffsetDateTime>
 }
 
 #[derive(Deserialize, Debug)]
