@@ -21,9 +21,12 @@ export interface Service {
 export interface ServiceStatus {
   service_name: string;
   status: "up" | "down";
-  service_status: string;
+  category: string;
   error_msg?: string;
+  ssl_exp?: number[] | null;
 }
+
+export type ServiceStatusGrouped = Record<string, ServiceStatus[]>;
 
 export interface NodeInfo {
   system_name: string;

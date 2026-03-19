@@ -6,6 +6,7 @@ import type {
   CPUStatRaw,
   Service,
   ServiceStatus,
+  ServiceStatusGrouped,
   NodeInfo,
   LoginCredentials,
   LoginResponse,
@@ -14,19 +15,15 @@ import type {
 } from "@/types";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const getApiUrl = () => {
-  if (typeof window !== 'undefined' && (window as any).__ENV__?.API_URL) {
-    return (window as any).__ENV__.API_URL;
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined' && (window as any).__ENV__?.BASE_URL) {
+    return (window as any).__ENV__.BASE_URL;
   }
-  return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
+  return process.env.NEXT_PUBLIC_BASE_URL || '';
 };
 
-const getAuthUrl = () => {
-  if (typeof window !== 'undefined' && (window as any).__ENV__?.AUTH_URL) {
-    return (window as any).__ENV__.AUTH_URL;
-  }
-  return process.env.AUTH_URL || process.env.NEXT_PUBLIC_AUTH_URL || '';
-};
+const getApiUrl = () => `${getBaseUrl()}/view`;
+const getAuthUrl = () => `${getBaseUrl()}/auth`;
 
 const getHeaders = () => {
   const token =
@@ -134,7 +131,7 @@ export const api = {
     return (await handleResponse<Service[]>(response, [])) ?? [];
   },
 
-  async getServiceStatus(nodeId: number): Promise<ServiceStatus[]> {
+  async getServiceStatus(nodeId: number): Promise<ServiceStatusGrouped> {
     const response = await fetch(
       `${getApiUrl()}/service_current_stat?node=${nodeId}`,
       {
@@ -142,7 +139,7 @@ export const api = {
         headers: getHeaders(),
       },
     );
-    return (await handleResponse<ServiceStatus[]>(response, [])) ?? [];
+    return (await handleResponse<ServiceStatusGrouped>(response, {})) ?? {};
   },
 
   async userLogin(

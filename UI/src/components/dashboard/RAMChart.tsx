@@ -24,13 +24,18 @@ interface RAMChartProps {
 export function RAMChart({ nodeId, nodeName }: RAMChartProps) {
   const [data, setData] = useState<RAMData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
 
   const fetchHistory = useCallback(async () => {
     try {
       const ramHistory = await api.getRAMHistory(nodeId);
       setData(ramHistory.slice(0, 20));
-    } catch (error) {
+      setIsOffline(false);
+    } catch (error: any) {
       console.error("Error fetching RAM history:", error);
+      if (error.message?.includes("503")) {
+        setIsOffline(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -45,6 +50,7 @@ export function RAMChart({ nodeId, nodeName }: RAMChartProps) {
 
     eventSource.onmessage = (event) => {
       try {
+        setIsOffline(false);
         const newData = JSON.parse(event.data);
         const formattedPoint: RAMData = {
           free: newData.free,
@@ -63,7 +69,7 @@ export function RAMChart({ nodeId, nodeName }: RAMChartProps) {
     };
 
     eventSource.onerror = (err) => {
-      console.error("RAM SSE Error:", err);
+      setIsOffline(true);
     };
 
     return () => {
@@ -107,6 +113,13 @@ export function RAMChart({ nodeId, nodeName }: RAMChartProps) {
             <div className="h-[300px] flex items-center justify-center">
               <div className="animate-pulse text-muted-foreground">
                 Loading chart...
+              </div>
+            </div>
+          ) : isOffline ? (
+            <div className="h-[300px] flex flex-col items-center justify-center space-y-2">
+              <div className="text-destructive font-semibold">Node Offline</div>
+              <div className="text-muted-foreground text-sm text-center px-4">
+                Wait for the node to come back online for real-time data.
               </div>
             </div>
           ) : chartData.length === 0 ? (

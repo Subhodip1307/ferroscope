@@ -21,28 +21,80 @@ export function NodeCard({ node, index }: NodeCardProps) {
   const [cpuData, setCpuData] = useState<CPUData | null>(null);
   const [ramData, setRamData] = useState<RAMData | null>(null);
   const [loading, setLoading] = useState(true);
-const router = useRouter();
+  const [isOffline, setIsOffline] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
-  }, [node.id]);
+    const fetchInitialData = async () => {
+      try {
+        const [cpu, ram] = await Promise.all([
+          api.getLatestCPU(node.id),
+          api.getLatestRAM(node.id),
+        ]);
+        setCpuData(cpu);
+        setRamData(ram);
+        setIsOffline(false);
+      } catch (error: any) {
+        console.error("Error fetching initial node data:", error);
+        if (error.message?.includes("503")) {
+          setIsOffline(true);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const fetchData = async () => {
-    try {
-      const [cpu, ram] = await Promise.all([
-        api.getLatestCPU(node.id),
-        api.getLatestRAM(node.id),
-      ]);
-      setCpuData(cpu);
-      setRamData(ram);
-    } catch (error) {
-      console.error("Error fetching node data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchInitialData();
+
+    // Connect to SSE for real-time CPU updates
+    const cpuStreamUrl = api.getCPUStreamUrl(node.id);
+    const cpuEventSource = new EventSource(cpuStreamUrl);
+
+    cpuEventSource.onmessage = (event) => {
+      try {
+        setIsOffline(false);
+        const newData = JSON.parse(event.data);
+        setCpuData({
+          cpu: newData.value,
+          timestamp: newData.date_time
+        });
+      } catch (err) {
+        console.error("Error parsing CPU stream data:", err);
+      }
+    };
+
+    cpuEventSource.onerror = (err) => {
+      // EventSource automatically retries.
+      setIsOffline(true);
+    };
+
+    // Connect to SSE for real-time RAM updates
+    const ramStreamUrl = api.getRAMStreamUrl(node.id);
+    const ramEventSource = new EventSource(ramStreamUrl);
+
+    ramEventSource.onmessage = (event) => {
+      try {
+        setIsOffline(false);
+        const newData = JSON.parse(event.data);
+        setRamData({
+          free: newData.free,
+          total: newData.total,
+          timestamp: newData.timestamp
+        });
+      } catch (err) {
+        console.error("Error parsing RAM stream data:", err);
+      }
+    };
+
+    ramEventSource.onerror = (err) => {
+      setIsOffline(true);
+    };
+
+    return () => {
+      cpuEventSource.close();
+      ramEventSource.close();
+    };
+  }, [node.id]);
 
   const ramUsagePercent = ramData
     ? ((parseRAM(ramData.total) - parseRAM(ramData.free)) /
@@ -66,13 +118,13 @@ const router = useRouter();
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-semibold">{node.name}</CardTitle>
-            <Badge variant={cpuStatus > 80 ? "destructive" : "secondary"}>
-              {cpuStatus > 80 ? "High Load" : "Normal"}
+            <Badge variant={isOffline ? "destructive" : (cpuStatus > 80 ? "destructive" : "secondary")}>
+              {isOffline ? "Offline" : (cpuStatus > 80 ? "High Load" : "Normal")}
             </Badge>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className={`space-y-4 ${isOffline ? "opacity-50 grayscale" : ""}`}>
           <motion.div
             className="space-y-2"
             initial={{ opacity: 0 }}
@@ -102,8 +154,8 @@ const router = useRouter();
                 <HardDrive className="h-4 w-4 text-green-500" />
                 <span className="font-medium">RAM Usage</span>
               </div>
-              <span className="text-xs text-muted-foreground">
-                {ramData?.free} / {ramData?.total}
+              <span className="text-xs text-muted-foreground font-medium">
+                {ramData ? `${(parseRAM(ramData.total) - parseRAM(ramData.free)).toFixed(2)} GiB / ${ramData.total}` : "Loading..."}
               </span>
             </div>
             <Progress value={ramUsagePercent} className="h-2" />

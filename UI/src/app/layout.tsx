@@ -24,8 +24,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `window.__ENV__ = ${JSON.stringify({
-              API_URL: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "",
-              AUTH_URL: process.env.AUTH_URL || process.env.NEXT_PUBLIC_AUTH_URL || ""
+              BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || "",
             })};`,
           }}
         />
@@ -38,7 +37,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-right"
+            duration={2000}
+          />
         </ThemeProvider>
       </body>
     </html>

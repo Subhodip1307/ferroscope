@@ -4,8 +4,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CPUChart } from "@/components/dashboard/CPUChart";
 import { RAMChart } from "@/components/dashboard/RAMChart";
+import { ServiceStatusTabs } from "@/components/dashboard/ServiceStatusTabs";
 import { api } from "@/lib/api";
-import type { Node,ServiceStatus, NodeInfo } from "@/types";
+import type { Node, ServiceStatusGrouped, NodeInfo } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/dashboard/Header";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ export default function NodeDetailsPage() {
 
   const [node, setNode] = useState<Node | null>(null);
   const [nodeInfo, setNodeInfo] = useState<NodeInfo | null>(null);
-  const [services, setServices] = useState<ServiceStatus[]>([]);
+  const [services, setServices] = useState<ServiceStatusGrouped>({});
   const [loadingServices, setLoadingServices] = useState(false);
   const [loadingInfo, setLoadingInfo] = useState(false);
 
@@ -73,13 +74,7 @@ export default function NodeDetailsPage() {
       setLoadingServices(true);
 
       const response = await api.getServiceStatus(nodeId);
-
-      if (!response || !response.length) {
-        setServices([]);
-        return;
-      }
-
-      setServices(response);
+      setServices(response || {});
     } catch (error) {
       console.error("Error fetching services:", error);
     } finally {
@@ -150,62 +145,8 @@ export default function NodeDetailsPage() {
                   <div className="text-center py-4 text-muted-foreground italic">
                     Loading services...
                   </div>
-                ) : services.length === 0 ? (
-                  <div className="text-center py-4 text-muted-foreground italic">
-                    No services found for this node.
-                  </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {services.map((service) => {
-                      const isUnreachable =
-                        service.service_status === "Unreachable";
-                      const isUp = service.status === "up";
-
-                      return (
-                        <div
-                          key={service.service_name}
-                          className="flex flex-col gap-2 p-4 rounded-lg border bg-card hover:bg-accent/5 transition-all"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              {isUnreachable ? (
-                                <XCircle className="w-5 h-5 text-red-500" />
-                              ) : isUp ? (
-                                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                              ) : (
-                                <XCircle className="w-5 h-5 text-red-500" />
-                              )}
-
-                              <span className="font-medium">
-                                {service.service_name}
-                              </span>
-                            </div>
-
-                            <Badge
-                              variant={
-                                isUnreachable
-                                  ? "destructive"
-                                  : isUp
-                                    ? "default"
-                                    : "destructive"
-                              }
-                            >
-                              {isUnreachable ? "Unreachable" : service.status}
-                            </Badge>
-                          </div>
-
-                          {/* Show error if reachable but down */}
-                          {!isUnreachable &&
-                            service.status === "down" &&
-                            service.error_msg && (
-                              <div className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded-md">
-                                {service.error_msg}
-                              </div>
-                            )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <ServiceStatusTabs services={services} />
                 )}
               </CardContent>
             </Card>
