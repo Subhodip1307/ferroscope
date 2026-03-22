@@ -2,7 +2,7 @@ use sqlx::PgPool;
 mod models;
 mod objects;
 use axum::Router;
-use models::{create_tables, create_user_if_not_exist};
+use models::{create_user_if_not_exist};
 use objects::AppState;
 mod agent_views;
 mod user_views;
@@ -16,7 +16,7 @@ use tower_http::cors::CorsLayer;
 use user_views::view_routers;
 use mini_moka::sync::Cache;
 use std::time::Duration;
-
+mod process;
 #[tokio::main]
 async fn main() {
     #[cfg(not(debug_assertions))]
@@ -45,19 +45,15 @@ async fn main() {
         .unwrap();
 
     #[cfg(debug_assertions)]
-    let pg_pool = PgPool::connect("postgres://myuser:mypassword@127.0.0.1:5433/mydatabase")
+    let pg_pool = PgPool::connect("postgres://myuser:mypassword@127.0.0.1:5432/mydatabase")
         .await
         .unwrap();
 
-    match create_tables(&pg_pool).await {
-        Ok(_) => {
-            println!("table creation done");
-        }
-        Err(e) => {
-            println!("error in table create {:?}", e);
-            return;
-        }
-    };
+    sqlx::migrate!("./migrations")
+        .run(&pg_pool)
+        .await.unwrap();
+    
+
 
     match create_user_if_not_exist(&pg_pool).await {
         Ok(_) => {
