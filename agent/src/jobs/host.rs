@@ -1,3 +1,4 @@
+use serde_json::json;
 // Executor
 use tokio::net::TcpStream;
 use tokio::time::{Duration, timeout};
@@ -5,7 +6,7 @@ use super::config_reader::{file_name_list, load_config};
 use super::structures::{BaseFormat, Host};
 use std::sync::Arc;
 use crate::set_up::BaseConFig;
-use reqwest::Client;
+use crate::Payload;
 use std::sync::LazyLock;
 use std::env;
 
@@ -18,7 +19,7 @@ async fn host_check(host: &Host) -> bool {
         .is_ok()
 }
 
-pub(super) async fn host_runner(api_client: Arc<Client>, config: Arc<BaseConFig>) {
+pub(super) async fn host_runner(api_queue:tokio::sync::mpsc::Sender<Payload>, config: Arc<BaseConFig>) {
     let all_files = match file_name_list(&format!("{}/Host", *CONFDIR)).await {
         Ok(value) => value,
         Err(e) => {
@@ -44,9 +45,7 @@ pub(super) async fn host_runner(api_client: Arc<Client>, config: Arc<BaseConFig>
             }
         };
         let host_status = host_check(&value).await;
-        let res = api_client
-            .post(&baseapi)
-            .json(&BaseFormat {
+        api_queue.send(Payload { endpoint: baseapi.clone(), body:json!(BaseFormat {
                 service_name: value.name,
                 category: "Host".to_string(),
                 ssl_exp: None,
@@ -56,10 +55,6 @@ pub(super) async fn host_runner(api_client: Arc<Client>, config: Arc<BaseConFig>
                     "down".to_string()
                 },
                 error_msg: "".to_string(),
-            })
-            .send()
-            .await
-            .unwrap();
-        println!("the res is {:?}", res);
+            }) }).await.unwrap();
     } //endfor
 }

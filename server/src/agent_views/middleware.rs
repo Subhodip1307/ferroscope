@@ -33,16 +33,17 @@ pub(super) async fn agent_auth_middleware(
                     .await
                     .unwrap();
                 let out_put: (bool, i64) = match fetch_data {
-                    Some(value) => (true, value.get("id")),
+                    Some(value) =>{
+                        let user_pk=value.get("id");
+                        // setting cache
+                        db_state.cache.insert(cache_key,user_pk);
+                         (true, user_pk)
+                    },
                     None => (false, 0),
                 };
-                // setting the cache
-                db_state.cache.insert(cache_key,out_put.1);
-
                 out_put
             }
         };
-
         if !out_put.0 {
             return Err(StatusCode::UNAUTHORIZED);
         }

@@ -297,16 +297,20 @@ node=<node_id>
 ### Response
 
 ```json
-[
-  {
-    "service_name": "nginx",
-    "category":"<Host/Web>"
-  },
+{
+  "Web":[
+    {
+      "service_name": "nginx",
+      "category":"<Host/Web>"
+    },
+  ],
+  "Host":[
   {
     "service_name": "postgres",
     "category":"<Host/Web>"
   }
-]
+  ]
+}
 ```
 
 ---
@@ -378,24 +382,36 @@ node=<node_id>
 ### Response
 
 ```json
-[
-  {
-    "service_name": "nginx",
-    "status": "running",
-    "service_status": "Reachable",
-    "error_msg": "",
-    "category":"Host",
-    "ssl_exp":null
-  },
-  {
-    "service_name": "postgres",
-    "status": "running",
-    "service_status": "Reachable",
-    "error_msg": "",
-    "category":"Web",
-    "ssl_exp":"utc_time"
-  }
-]
+{
+    "Web": [
+        {
+            "service_name": "mywebsite",
+            "error_msg": "",
+            "status": "up",
+            "category": "Web",
+            "ssl_exp": [
+                2026,
+                113,
+                21,
+                53,
+                58,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+      ],
+    "HOST":[
+      {
+            "service_name": "myhost",
+            "error_msg": "",
+            "status": "up",
+            "category": "Web",
+            "ssl_exp": null
+        }
+    ]
+}
 ```
 
 ---

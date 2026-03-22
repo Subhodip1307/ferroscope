@@ -28,7 +28,8 @@ impl ConfSetUp {
             let parrent_dir = Path::new(&self.conf_dir);
             // no dir found need to create one
             if fs::create_dir_all(parrent_dir).await.is_err() {
-                panic!("Unable to create CONF dir at {}", self.conf_dir)
+                println!("Unable to create CONF dir at {}", self.conf_dir);
+                std::process::exit(1)
             };
 
             for i in self.jobs_dir {
@@ -49,10 +50,11 @@ web_interval = 60
 host_interval = 60         
             "#;
             let _ = fs::write(parrent_dir.join("agent.toml"), bufer_data).await;
-            panic!(
+            println!(
                 "Please set-up the config before starting, path => {}",
                 self.conf_dir
-            )
+            );
+            std::process::exit(1)
         }
     }
 

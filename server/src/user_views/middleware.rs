@@ -31,12 +31,14 @@ pub(super) async fn user_auth(
                     .await
                     .unwrap();
                 let out_put: (bool, i64) = match fetch_data {
-                    Some(value) => (true, value.get("user_id")),
+                    Some(value) => {
+                    let user_pk=value.get("user_id");
+                    // setting the cache
+                    db_state.cache.insert(cache_key,user_pk);
+                    (true, user_pk)
+                    },
                     None => (false, 0),
                 };
-                // setting the cache
-                db_state.cache.insert(cache_key,out_put.1);
-
                 out_put
             }
         };
