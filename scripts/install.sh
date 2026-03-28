@@ -10,7 +10,7 @@ fi
 URL="https://github.com/Subhodip1307/ferroscope/releases/download/v0.1.0/x86_64-unknown-linux-musl.tar.gz"
 FILE="ferroscope.tar.gz"
 echo "Downloading..."
-# cd /usr/local/bin
+cd /usr/local/bin
 curl -L "$URL" -o "$FILE"
 
 echo "Extracting..."
