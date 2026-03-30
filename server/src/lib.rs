@@ -1,8 +1,7 @@
 use argon2::password_hash::{PasswordHash, PasswordHasher, SaltString};
 use argon2::{Algorithm, Argon2, Params, PasswordVerifier, Version};
 use rand::rngs::OsRng;
-
-
+use std::time::{SystemTime, UNIX_EPOCH};
 
 fn argon2_instance() -> Argon2<'static> {
     let params = Params::new(
@@ -37,4 +36,11 @@ pub fn verify_password(password: &str, stored_hash: &str) -> bool {
     argon2
         .verify_password(password.as_bytes(), &parsed_hash)
         .is_ok()
+}
+
+pub fn current_time() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64
 }

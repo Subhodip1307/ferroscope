@@ -1,17 +1,17 @@
 use super::objects as payload;
 use crate::objects::AppState;
 use crate::user_views::{LatestCpu, LatestRam};
-use axum::http::{ StatusCode};
-use axum::{Json, Extension,extract::State};
+use axum::http::StatusCode;
+use axum::{Extension, Json, extract::State};
 use chrono::Utc;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::watch;
 
 pub async fn __system_info(
     State(db_state): State<AppState>,
-    Extension(nodes_id):Extension<i64>,
+    Extension(nodes_id): Extension<i64>,
     data: Json<payload::SysInfo>,
 ) -> StatusCode {
-
     sqlx::query(
         "INSERT INTO sysinfo (node_id,
                 system_name,
@@ -46,32 +46,27 @@ pub async fn __system_info(
 }
 
 pub async fn __cpu_metrix(
-    Extension(nodes_id):Extension<i64>,
+    Extension(nodes_id): Extension<i64>,
     State(db_state): State<AppState>,
     data: Json<payload::CpuStats>,
 ) -> StatusCode {
+    let cpu_node_key = format!("node_cpu_metrix_{}", nodes_id);
 
-    let cpu_node_key=format!("node_cpu_metrix_{}",nodes_id);
-    println!("getting cpu");
-    
     // if not in the cache key then insert or don't
     // in future will use differnt cache builder for ttl tuneing
-    if !db_state.cache.contains_key(&cpu_node_key){
-        println!("Enteriing cpu");
-
+    if !db_state.cache.contains_key(&cpu_node_key) {
         //TODO: change cpu from f64
         sqlx::query("INSERT INTO cpu_stats (value,node_id) VALUES ($1,$2)")
-        .bind(data.cpu)
-        .bind(nodes_id)
-        .execute(&db_state.db)
-        .await
-        .expect("failed to insert user");
-        
+            .bind(data.cpu)
+            .bind(nodes_id)
+            .execute(&db_state.db)
+            .await
+            .expect("failed to insert user");
+
         // adding to cache
-        db_state.cache.insert(cpu_node_key, 0);//will be there for 5min until that no data entry
+        db_state.cache.insert(cpu_node_key, 0); //will be there for 5min until that no data entry
     };
 
-    
     // putting in the stream
     let node_key = format!("node_cpu_strem_{nodes_id}");
     if db_state.cpu_strem.contains_key(&node_key) {
@@ -92,29 +87,23 @@ pub async fn __cpu_metrix(
 }
 
 pub async fn __memory_metrix(
-   Extension(nodes_id):Extension<i64>,
+    Extension(nodes_id): Extension<i64>,
     State(db_state): State<AppState>,
     data: Json<payload::MemoryStats>,
 ) -> StatusCode {
-    println!("Memory metrix");
+    let ram_node_key = format!("node_ram_metrix_{}", nodes_id);
 
-    let ram_node_key=format!("node_ram_metrix_{}",nodes_id);
-
-
-
-    if !db_state.cache.contains_key(&ram_node_key){
-    println!("Enteriing ram");
-    sqlx::query("INSERT INTO memory_metrics (free,total,node_id) VALUES ($1,$2,$3)")
-        .bind(&data.free)
-        .bind(&data.total)
-        .bind(nodes_id)
-        .execute(&db_state.db)
-        .await
-        .expect("failed to insert user");
+    if !db_state.cache.contains_key(&ram_node_key) {
+        sqlx::query("INSERT INTO memory_metrics (free,total,node_id) VALUES ($1,$2,$3)")
+            .bind(&data.free)
+            .bind(&data.total)
+            .bind(nodes_id)
+            .execute(&db_state.db)
+            .await
+            .expect("failed to insert user");
         // inserting the cache
-        db_state.cache.insert(ram_node_key,0);
+        db_state.cache.insert(ram_node_key, 0);
     }
-
 
     let node_key = format!("node_ram_strem_{nodes_id}");
     if db_state.ram_strem.contains_key(&node_key) {
@@ -137,7 +126,7 @@ pub async fn __memory_metrix(
 }
 
 pub async fn __service_monitor(
-    Extension(nodes_id):Extension<i64>,
+    Extension(nodes_id): Extension<i64>,
     State(db_state): State<AppState>,
     data: Json<payload::ServiceMonitor>,
 ) -> StatusCode {
@@ -166,7 +155,7 @@ pub async fn __service_monitor(
 }
 
 pub async fn __update_uptime(
-    Extension(nodes_id):Extension<i64>,
+    Extension(nodes_id): Extension<i64>,
     State(db_state): State<AppState>,
     data: Json<payload::UpdateUptime>,
 ) -> StatusCode {
@@ -177,4 +166,18 @@ pub async fn __update_uptime(
         .await
         .expect("Unable to update Uptime");
     StatusCode::OK
+}
+
+pub async fn __helth_check(Extension(nodes_id): Extension<i64>, State(db_state): State<AppState>) {
+    println!("getting data");
+    let current = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64;
+    let key = nodes_id;
+    db_state
+        .helth_check
+        .entry(key)
+        .and_modify(|v| *v = current)
+        .or_insert(current);
 }

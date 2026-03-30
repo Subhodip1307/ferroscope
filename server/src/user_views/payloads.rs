@@ -25,6 +25,6 @@ pub(super) struct ServiceQuery {
 }
 
 #[derive(Deserialize)]
-pub (super) struct CreateNode{
-    pub name:String
+pub(super) struct CreateNode {
+    pub name: String,
 }

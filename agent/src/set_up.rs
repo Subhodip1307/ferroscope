@@ -95,7 +95,7 @@ impl BaseConFig {
         self.api_time_out as u64
     }
     pub fn get_server_url(&self) -> &str {
-        &self.agent_server_url
+        &self.agent_server_url.trim_end_matches("/")
     }
 
     pub fn get_web_interval(&self) -> u64 {

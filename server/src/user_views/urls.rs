@@ -9,9 +9,6 @@ use axum::{
     routing::{get, post},
 };
 
-
-
-
 fn streaming_routers(app_state: AppState) -> Router {
     Router::new()
         .route("/cpu", get(streaming::stream_cpu_metrics))
@@ -33,8 +30,14 @@ pub fn view_routers(app_state: AppState) -> Router {
         .route("/cpu_stat", post(views::__get_latest_cpu_hisotry))
         .route("/ram_stat", post(views::__get_latest_ram_hisotry))
         .route("/node_services", post(views::__get_all_service_of_node))
-        .route("/single_service_current_stat",post(views::__get_single_service_current_status))
-        .route("/service_current_stat",post(views::__get_service_current_status))
+        .route(
+            "/single_service_current_stat",
+            post(views::__get_single_service_current_status),
+        )
+        .route(
+            "/service_current_stat",
+            post(views::__get_service_current_status),
+        )
         .route("/get_userdetails", post(__get_user_name))
         .route("/change_password", post(__change_password))
         .route("/create_nodes", post(views::__create_node))

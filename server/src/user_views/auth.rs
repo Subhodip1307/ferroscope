@@ -1,12 +1,12 @@
 use super::payloads::{Login, UsernamePasswordReset};
-use super::response::{AuthUser, AuthuserIdPassword, AuthToken};
+use super::response::{AuthToken, AuthUser, AuthuserIdPassword};
 use crate::objects::AppState;
 use axum::http::StatusCode;
 use axum::{Extension, Json, extract::State};
+use ferroscope_server::{hash_password, verify_password};
 use sqlx::Row;
 use std::collections::HashMap;
 use uuid::Uuid;
-use ferroscope_server::{verify_password,hash_password};
 
 pub(super) async fn login_user(
     State(db_state): State<AppState>,

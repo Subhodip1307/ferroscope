@@ -19,7 +19,7 @@ pub struct ServiceMonitor {
     pub status: String, //runing or dead
     pub error_msg: Option<String>,
     pub category: String,
-    pub ssl_exp:Option<OffsetDateTime>
+    pub ssl_exp: Option<OffsetDateTime>,
 }
 
 #[derive(Deserialize, Debug)]

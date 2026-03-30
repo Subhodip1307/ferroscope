@@ -3,7 +3,6 @@ use ferroscope_server::hash_password;
 use sqlx::PgPool;
 use std::env;
 
-
 pub async fn create_user_if_not_exist(pg_pool: &PgPool) -> Result<(), sqlx::Error> {
     let mut tx = pg_pool.begin().await?;
 

@@ -24,7 +24,11 @@ pub async fn stream_cpu_metrics(
 
     let rx = node_recever.subscribe();
 
-    let strem = WatchStream::new(rx).map(|cpu| Ok(Event::default().json_data(cpu).unwrap()));
+    let strem = WatchStream::new(rx)
+        .take_while(|cpu| {
+            std::future::ready(cpu.value != -100.0)
+        })
+        .map(|cpu| Ok(Event::default().json_data(cpu).unwrap()));
 
     Ok(Sse::new(strem).keep_alive(KeepAlive::default()))
 }
@@ -43,6 +47,8 @@ pub async fn stream_ram_metrics(
 
     let rx = node_recever.subscribe();
 
-    let strem = WatchStream::new(rx).map(|ram| Ok(Event::default().json_data(ram).unwrap()));
+    let strem = WatchStream::new(rx)
+        .take_while(|ram| std::future::ready(ram.free != "STOP".to_string()))
+        .map(|ram| Ok(Event::default().json_data(ram).unwrap()));
     Ok(Sse::new(strem).keep_alive(KeepAlive::default()))
 }

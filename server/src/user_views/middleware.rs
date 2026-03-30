@@ -19,11 +19,10 @@ pub(super) async fn user_auth(
             Err(_) => return Err(StatusCode::UNAUTHORIZED),
         };
 
-        let cache_key=format!("user_auth_{auth_str}");
+        let cache_key = format!("user_auth_{auth_str}");
         let out_put: (bool, i64) = match db_state.cache.get(&cache_key) {
-            Some(value) => {println!("cache hit done");  (true, value)},
+            Some(value) => (true, value),
             None => {
-                println!("No cache hit done");
                 let fetch_data = sqlx::query("SELECT user_id FROM auth_tokens where token=$1")
                     .persistent(true)
                     .bind(auth_str)
@@ -32,11 +31,11 @@ pub(super) async fn user_auth(
                     .unwrap();
                 let out_put: (bool, i64) = match fetch_data {
                     Some(value) => {
-                    let user_pk=value.get("user_id");
-                    // setting the cache
-                    db_state.cache.insert(cache_key,user_pk);
-                    (true, user_pk)
-                    },
+                        let user_pk = value.get("user_id");
+                        // setting the cache
+                        db_state.cache.insert(cache_key, user_pk);
+                        (true, user_pk)
+                    }
                     None => (false, 0),
                 };
                 out_put

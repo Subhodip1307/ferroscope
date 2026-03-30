@@ -84,14 +84,32 @@ async fn main() {
             }
         });
     }
+    
     // uptime
+    {
     let system_conf: Arc<set_up::BaseConFig> = conf.clone();
     let system_api_sender= tx.clone();
 
-    let mut tick = interval(Duration::from_secs(system_conf.get_uptime_interval()));
-    loop {
+    tokio::spawn(async move{
+        let mut tick = interval(Duration::from_secs(system_conf.get_uptime_interval()));
+        loop {
         system::send_uptime(system_conf.clone(), system_api_sender.clone()).await;
         tick.tick().await;
+        }
+    });
+
+    
+   
+    let system_conf: Arc<set_up::BaseConFig> = conf.clone();
+    let mut tick = interval(Duration::from_secs(10));
+    loop {
+            let _=api_client.get(&format!("{}/helth_check",system_conf.get_server_url())).send().await;
+            tick.tick().await;
+    }
+
+
+    
+    
     }
 }
 
