@@ -111,7 +111,9 @@ POST /view/change_password
 ```json
 {
   "username": "admin",
-  "password": "new_secure_password"
+  "password": "new_secure_password",
+  "email":"<Optional_but_unique>" ,
+
 }
 ```
 

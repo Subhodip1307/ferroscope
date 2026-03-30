@@ -15,6 +15,9 @@ services:
     environment:
       CORS: "http://localhost:3000,http://127.0.0.1:3000"
       PSQL_URL: postgres://myuser:mypassword@database:5432/mydatabase
+      EMAIL_SERVER: postgres://myuser:mypassword@database:5432/mydatabase
+      EMAIL_HOST: postgres://myuser:mypassword@database:5432/mydatabase
+      EMAIL_HOSTs: postgres://myuser:mypassword@database:5432/mydatabase
     user: "scope:scope"
     ports:
       - "8000:8000"

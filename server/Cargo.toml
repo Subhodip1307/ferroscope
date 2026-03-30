@@ -24,4 +24,5 @@ dashmap = "6.1.0"
 tokio-stream = { version = "0.1.18", features = ["sync"] }
 futures-util = "0.3.32"
 mini-moka = "0.10.3"
-time = { version = "0.3", features = ["serde"] }
+time = { version = "0.3", features = ["serde"] } 
+lettre = { version = "0.11.20" , features = ["tokio1-native-tls", "smtp-transport", "builder"] }

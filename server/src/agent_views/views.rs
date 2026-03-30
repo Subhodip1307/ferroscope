@@ -4,7 +4,6 @@ use crate::user_views::{LatestCpu, LatestRam};
 use axum::http::StatusCode;
 use axum::{Extension, Json, extract::State};
 use chrono::Utc;
-use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::watch;
 
 pub async fn __system_info(
@@ -69,20 +68,23 @@ pub async fn __cpu_metrix(
 
     // putting in the stream
     let node_key = format!("node_cpu_strem_{nodes_id}");
-    if db_state.cpu_strem.contains_key(&node_key) {
-        let tx = db_state.cpu_strem.get(&node_key).unwrap();
-        let _ = tx.send(LatestCpu {
-            value: data.cpu,
-            date_time: Utc::now(),
-        });
-    } else {
-        let (tx, _) = watch::channel(LatestCpu {
-            value: data.cpu,
-            date_time: Utc::now(),
-        });
-        db_state.cpu_strem.insert(node_key, tx);
-    };
 
+    db_state
+        .cpu_strem
+        .entry(node_key)
+        .and_modify(|sender| {
+            let _ = sender.send(LatestCpu {
+                value: data.cpu,
+                date_time: Utc::now(),
+            });
+        })
+        .or_insert({
+            let (tx, _) = watch::channel(LatestCpu {
+                value: data.cpu,
+                date_time: Utc::now(),
+            });
+            tx
+        });
     StatusCode::OK
 }
 
@@ -170,10 +172,7 @@ pub async fn __update_uptime(
 
 pub async fn __helth_check(Extension(nodes_id): Extension<i64>, State(db_state): State<AppState>) {
     println!("getting data");
-    let current = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as u64;
+    let current = ferroscope_server::current_time();
     let key = nodes_id;
     db_state
         .helth_check

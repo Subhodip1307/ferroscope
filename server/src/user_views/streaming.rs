@@ -25,9 +25,7 @@ pub async fn stream_cpu_metrics(
     let rx = node_recever.subscribe();
 
     let strem = WatchStream::new(rx)
-        .take_while(|cpu| {
-            std::future::ready(cpu.value != -100.0)
-        })
+        .take_while(|cpu| std::future::ready(cpu.value != -100.0))
         .map(|cpu| Ok(Event::default().json_data(cpu).unwrap()));
 
     Ok(Sse::new(strem).keep_alive(KeepAlive::default()))

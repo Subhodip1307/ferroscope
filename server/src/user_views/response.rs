@@ -58,7 +58,6 @@ pub(super) struct ServiceList {
 #[derive(Debug, Serialize)]
 pub(super) struct SingleServiceStatus {
     pub status: String,
-    pub service_status: String,
     pub error_msg: String,
     pub category: String,
     pub ssl_exp: Option<OffsetDateTime>,

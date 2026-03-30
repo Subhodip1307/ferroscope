@@ -151,10 +151,6 @@ pub(super) async fn __get_single_service_current_status(
     // remove this Unreachable and Reachable logic it's wrong
     let row = sqlx::query(
         "SELECT  error_msg,status,category,ssl_exp
-            CASE WHEN updated_at < NOW() - INTERVAL '5 minutes'
-            THEN 'Unreachable'
-            ELSE 'Reachable'
-            END AS service_status
          FROM service_monitor where node_id = $1 and service_name= $2",
     )
     .bind(payload.node)
@@ -165,7 +161,6 @@ pub(super) async fn __get_single_service_current_status(
     if let Some(value) = row {
         let error_msg = value.get("error_msg");
         let status = value.get("status");
-        let service_status = value.get("service_status");
         let category = value.get("category");
         let ssl_exp = value.get("ssl_exp");
         return Ok((
@@ -173,7 +168,6 @@ pub(super) async fn __get_single_service_current_status(
             Json(get_payload::SingleServiceStatus {
                 status,
                 error_msg,
-                service_status,
                 category,
                 ssl_exp,
             }),
@@ -190,12 +184,7 @@ pub(super) async fn __get_service_current_status(
     Json<HashMap<String, Vec<get_payload::ServiceStatus>>>,
 ) {
     let rows = sqlx::query_as::<_, get_payload::ServiceStatus>(
-        "SELECT  error_msg,status,service_name,category,ssl_exp,
-            CASE 
-            WHEN  updated_at < NOW() - INTERVAL '5 minutes'
-            THEN 'Unreachable'
-            ELSE 'Reachable'
-            END AS service_status
+        "SELECT  error_msg,status,service_name,category,ssl_exp
          FROM service_monitor where node_id = $1 ",
     )
     .bind(params.node)

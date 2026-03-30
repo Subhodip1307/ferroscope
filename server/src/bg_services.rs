@@ -1,8 +1,19 @@
+use std::env;
+
+use tokio::sync::mpsc;
+
 use crate::AppState;
 use crate::user_views::LatestCpu;
 use crate::user_views::LatestRam;
 use chrono::Utc;
 use tokio::time::{Duration, interval};
+use lettre::{
+    message::Mailbox,
+    transport::smtp::authentication::Credentials,
+    AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
+};
+
+
 
 pub async fn node_status_check(app_state: AppState) {
     // runing backgrond services
@@ -59,4 +70,45 @@ pub async fn node_status_check(app_state: AppState) {
             } //end
         }
     });
+}
+
+
+pub async fn send_notification_mail(mut receiver:mpsc::Receiver<String>){
+    println!("runing mee");
+    tokio::spawn(async move {
+             let username=env::var("EmailUser");
+            let password=env::var("EmailPassword");
+            let (user,pass)=  match (username,password)  {
+                (Ok(v1),Ok(v2))=>{print!("EMAIL Usere & Password Found"); (v1,v2)},
+                _=>{print!("EMAIL Usere & Password not Found"); return ; }
+            };
+
+            let creds = Credentials::new(
+            user,
+            pass,
+        );
+
+        let mailer= AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.gmail.com")
+            .unwrap()
+            .credentials(creds)
+            .pool_config(
+                lettre::transport::smtp::PoolConfig::new()
+                    .max_size(1)
+            )
+            .build();
+        
+        while let Some(msg)=receiver.recv().await {
+            let email = Message::builder()
+            .from("Your Name <your@gmail.com>".parse().unwrap())
+            .to(msg.parse().unwrap())
+            .subject("Hello")
+            .body(msg)
+            .unwrap();
+            let _ = mailer.send(email).await;
+            
+        }
+
+    });
+
+
 }

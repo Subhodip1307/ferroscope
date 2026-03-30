@@ -6,8 +6,7 @@ use procfs::CurrentSI;
 use procfs::KernelStats;
 use procfs::Meminfo;
 use procfs::Uptime;
-use std::thread::sleep;
-use std::time::Duration;
+use tokio::time::{sleep, Duration};
 use sysinfo::{/*Disks,*/ System};
 
 fn cpu_total_ticks(ct: &procfs::CpuTime) -> u128 {
@@ -33,13 +32,13 @@ fn cpu_total_ticks(ct: &procfs::CpuTime) -> u128 {
     total
 }
 
-pub fn total_cpu_usage() -> anyhow::Result<f64> {
+pub async fn total_cpu_usage() -> anyhow::Result<f64> {
     // 1st sample
     let k1 = KernelStats::current()?;
     let total1 = cpu_total_ticks(&k1.total);
     let idle1 = k1.total.idle as u128 + k1.total.iowait.unwrap_or(0) as u128; // include iowait in idle if present
 
-    sleep(Duration::from_millis(500));
+    sleep(Duration::from_millis(500)).await;
 
     // 2nd sample
     let k2 = KernelStats::current()?;

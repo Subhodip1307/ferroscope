@@ -339,18 +339,13 @@ POST /view/single_service_current_stat
 ```json
 {
   "status": "running",
-  "service_status": "Reachable",
   "error_msg": "",
   "category":"<Host/Web>",
   "ssl_exp":"null_or_utc_time"
 }
 ```
 
-Possible service status values:
-
-```
-Reachable
-Unreachable
+e
 ```
 
 If the service is not found:
