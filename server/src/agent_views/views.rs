@@ -172,7 +172,7 @@ pub async fn __update_uptime(
 
 pub async fn __helth_check(Extension(nodes_id): Extension<i64>, State(db_state): State<AppState>) {
     println!("getting data");
-    let current = ferroscope_server::current_time();
+    let current = ferroscope_server::global::utils_functions::current_time();
     let key = nodes_id;
     db_state
         .helth_check

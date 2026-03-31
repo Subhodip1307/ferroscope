@@ -4,8 +4,10 @@ use mini_moka::sync::Cache;
 use sqlx::PgPool;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::watch::Sender;
 use tokio::sync::mpsc;
+use tokio::sync::watch::Sender;
+use  ferroscope_server::global::structure::NotificationData;
+
 
 #[derive(Clone)]
 pub struct AppState {
@@ -14,11 +16,11 @@ pub struct AppState {
     pub ram_strem: Arc<DashMap<String, Sender<LatestRam>>>,
     pub helth_check: Arc<DashMap<i64, u64>>,
     pub cache: Cache<String, i64>, //cache to store i64
-    pub notifier: mpsc::Sender<String>
+    pub notifier: mpsc::Sender<NotificationData>,
 }
 
 impl AppState {
-    pub fn new(pg_pool: sqlx::Pool<sqlx::Postgres>,notifier: mpsc::Sender<String>) -> Self {
+    pub fn new(pg_pool: sqlx::Pool<sqlx::Postgres>, notifier: mpsc::Sender<NotificationData>) -> Self {
         // cache for user auth
         let cache: Cache<String, i64> = Cache::builder()
             .max_capacity(100)
@@ -29,7 +31,8 @@ impl AppState {
             cpu_strem: Arc::new(DashMap::new()),
             ram_strem: Arc::new(DashMap::new()),
             helth_check: Arc::new(DashMap::new()),
-            cache,notifier
+            cache,
+            notifier,
         }
     }
 }

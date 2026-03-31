@@ -3,7 +3,7 @@ use super::response::{AuthToken, AuthUser, AuthuserIdPassword};
 use crate::objects::AppState;
 use axum::http::StatusCode;
 use axum::{Extension, Json, extract::State};
-use ferroscope_server::{hash_password, verify_password};
+use ferroscope_server::global::utils_functions::{hash_password, verify_password};
 use sqlx::Row;
 use std::collections::HashMap;
 use uuid::Uuid;

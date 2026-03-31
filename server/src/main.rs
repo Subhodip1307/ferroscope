@@ -17,6 +17,7 @@ mod process;
 use tokio::sync::mpsc;
 
 
+
 #[tokio::main]
 async fn main() {
     #[cfg(not(debug_assertions))]
@@ -60,11 +61,10 @@ async fn main() {
             return;
         }
     };
-   
 
-    let (tx,rx) = mpsc::channel::<String>(20);
-    
-    let app_state = AppState::new(pg_pool,tx);
+    let (tx, rx) = mpsc::channel::<ferroscope_server::global::structure::NotificationData>(20);
+
+    let app_state = AppState::new(pg_pool, tx);
     let app = Router::new()
         .merge(send_routers(app_state.clone()))
         .merge(view_routers(app_state.clone()))

@@ -1,4 +1,4 @@
-use ferroscope_server::hash_password;
+use ferroscope_server::global::utils_functions::hash_password;
 use sqlx::{PgPool, Pool, Postgres};
 use std::env;
 
