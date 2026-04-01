@@ -137,7 +137,7 @@ pub(super) async fn __get_all_service_of_node(
     for service in rows {
         grouped
             .entry(service.category.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(service);
     }
     (StatusCode::OK, Json(grouped))
@@ -196,7 +196,7 @@ pub(super) async fn __get_service_current_status(
     for service in rows {
         grouped
             .entry(service.category.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(service);
     }
 

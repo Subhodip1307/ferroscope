@@ -1,13 +1,12 @@
 use crate::user_views::{LatestCpu, LatestRam};
 use dashmap::DashMap;
+use ferroscope_server::global::structure::NotificationData;
 use mini_moka::sync::Cache;
 use sqlx::PgPool;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::sync::watch::Sender;
-use  ferroscope_server::global::structure::NotificationData;
-
 
 #[derive(Clone)]
 pub struct AppState {
@@ -20,7 +19,10 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(pg_pool: sqlx::Pool<sqlx::Postgres>, notifier: mpsc::Sender<NotificationData>) -> Self {
+    pub fn new(
+        pg_pool: sqlx::Pool<sqlx::Postgres>,
+        notifier: mpsc::Sender<NotificationData>,
+    ) -> Self {
         // cache for user auth
         let cache: Cache<String, i64> = Cache::builder()
             .max_capacity(100)

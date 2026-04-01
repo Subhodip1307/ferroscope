@@ -83,7 +83,7 @@ pub(super) async fn __change_password(
         .await;
 
     match query_status {
-        Ok(_) => return StatusCode::OK,
-        Err(_) => return StatusCode::CONFLICT,
+        Ok(_) => StatusCode::OK,
+        Err(_) => StatusCode::CONFLICT,
     }
 }

@@ -46,7 +46,7 @@ pub async fn stream_ram_metrics(
     let rx = node_recever.subscribe();
 
     let strem = WatchStream::new(rx)
-        .take_while(|ram| std::future::ready(ram.free != "STOP".to_string()))
+        .take_while(|ram| std::future::ready(ram.free != "STOP"))
         .map(|ram| Ok(Event::default().json_data(ram).unwrap()));
     Ok(Sse::new(strem).keep_alive(KeepAlive::default()))
 }

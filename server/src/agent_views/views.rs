@@ -4,6 +4,7 @@ use crate::user_views::{LatestCpu, LatestRam};
 use axum::http::StatusCode;
 use axum::{Extension, Json, extract::State};
 use chrono::Utc;
+use ferroscope_server::global::structure::NotificationData;
 use tokio::sync::watch;
 
 pub async fn __system_info(
@@ -149,10 +150,22 @@ pub async fn __service_monitor(
     .bind(&data.error_msg)
     .bind(nodes_id)
     .bind(&data.category)
-    .bind(&data.ssl_exp)
+    .bind(data.ssl_exp)
     .execute(&db_state.db)
     .await
     .expect("failed to insert user");
+
+    if data.status == "down" {
+        let _ = db_state
+            .notifier
+            .send(NotificationData {
+                category: "SERVICE".to_string(),
+                sujbect: "Service is Offline".to_string(),
+                unique_id: data.service_name.to_string(),
+            })
+            .await;
+    };
+
     StatusCode::OK
 }
 
@@ -171,7 +184,6 @@ pub async fn __update_uptime(
 }
 
 pub async fn __helth_check(Extension(nodes_id): Extension<i64>, State(db_state): State<AppState>) {
-    println!("getting data");
     let current = ferroscope_server::global::utils_functions::current_time();
     let key = nodes_id;
     db_state
