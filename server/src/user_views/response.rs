@@ -71,3 +71,9 @@ pub(super) struct ServiceStatus {
     pub category: String,
     pub ssl_exp: Option<OffsetDateTime>,
 }
+
+
+#[derive(Debug,Serialize)]
+pub(super) struct __ArrayType<'a> {
+    pub data: Vec<&'a str>
+}

@@ -13,7 +13,7 @@ pub(super) struct UsernamePasswordReset {
 }
 
 #[derive(Deserialize)]
-pub(super) struct IdQuery {
+pub(super) struct IdQuery {//being used for nodeid service id or getting anyother types of id
     pub node: i64,
 }
 
@@ -27,4 +27,42 @@ pub(super) struct ServiceQuery {
 #[derive(Deserialize)]
 pub(super) struct CreateNode {
     pub name: String,
+}
+
+#[derive(Debug,Deserialize)]
+enum ConditionField {
+    Status,//node status
+    Value,//check certain values
+}
+
+#[derive(Deserialize,Debug)]
+struct Condition {
+    pub field: ConditionField,
+    pub operator: String,
+    pub value: i32,//0 for down 1 for up
+}
+
+#[derive(Deserialize,Debug)]
+enum NotificationChannel{
+    Webhook,
+    Email
+
+}
+
+#[derive(Deserialize,Debug)]
+struct Notify{
+    channel:NotificationChannel,
+    to:Vec<String>,
+    message:String
+}
+
+
+#[derive(Deserialize,Debug)]
+pub (super) struct RulesData {
+    pub name:String,
+    pub active:bool,
+    pub condition:Condition,
+    pub event_type:String,
+    pub notify:Notify
+
 }

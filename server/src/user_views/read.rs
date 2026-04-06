@@ -223,3 +223,18 @@ pub(super) async fn __create_node(
     }
     Err(StatusCode::CONFLICT)
 }
+
+pub (super) async fn __get_event_type(
+)->Json<get_payload::__ArrayType<'static>>
+{
+    let data=Vec::from(["CPU","RAM","SERVICE","NODE"]);
+    Json(get_payload::__ArrayType{data})
+}
+
+pub (super) async fn __get_notification_type(
+)->Json<get_payload::__ArrayType<'static>>
+{
+    let data=Vec::from(["webhook","email"]);
+    Json(get_payload::__ArrayType{data})
+}
+

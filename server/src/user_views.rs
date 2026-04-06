@@ -1,9 +1,10 @@
 mod payloads;
 mod response;
 mod urls;
-mod views;
+mod read;
 pub use urls::view_routers;
 mod auth;
 mod middleware;
 pub use response::{LatestCpu, LatestRam};
 mod streaming;
+mod write;
