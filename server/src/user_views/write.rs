@@ -43,9 +43,22 @@ pub (super) async  fn __remove_node(
 
 
 pub (super) async fn __create_notification_rules(
-    // State(db_state): State<AppState>,
+    State(db_state): State<AppState>,
     Json(data):Json<payloads::RulesData>
 )->StatusCode{
-    println!("data is {:?}",data);
+    let create=sqlx::query(
+        "INSERT INTO rules (name,is_active,event_type,condition_json,action_json,created_by)
+        VALUES ($1,$2,$3,$4,$5,$6);
+        "
+    )
+    .bind(data.name)
+    .bind(data.active)
+    .bind(data.event_type.to_string())
+    .bind(data.condition)
+    // .bind(data.action)
+    .execute(&db_state.db).await;
+    ;
+
+
     StatusCode::OK
 }
