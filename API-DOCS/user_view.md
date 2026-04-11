@@ -1,49 +1,60 @@
-# Ferroscope API – Node & Metrics Endpoints
+# Ferroscope — Read / View API
 
-These endpoints allow applications to query **nodes, system information, metrics, and monitored services** from a Ferroscope server.
+These endpoints let you **read data** from nodes — system info, CPU/RAM metrics, and service statuses.
 
-These APIs are intended for developers building:
-
-* Custom dashboards
-* Mobile monitoring apps
-* Web monitoring interfaces
-* Automation systems
-
-All endpoints in this section require **authentication**.
-
-See the [Authentication Guide](authentication.md) for details on how to obtain an API token.
+Intended for developers building dashboards, monitoring apps, or automation tools on top of Ferroscope.
 
 ---
 
-# Authentication
+## Index
 
-All `/view/*` endpoints require a valid **Authorization token**.
+- [Authentication](#authentication)
+- [Base Path](#base-path)
+- [Get Node List](#get-node-list)
+- [Get Node System Info](#get-node-system-info)
+- [Get Latest CPU Usage](#get-latest-cpu-usage)
+- [Get Latest RAM Usage](#get-latest-ram-usage)
+- [CPU Usage History](#cpu-usage-history)
+- [RAM Usage History](#ram-usage-history)
+- [List Services on a Node](#list-services-on-a-node)
+- [Get Status of a Single Service](#get-status-of-a-single-service)
+- [Get Status of All Services](#get-status-of-all-services)
 
-Include the token in the request header:
+---
+
+## Authentication
+
+**Every endpoint in this section requires authentication**, regardless of whether it reads sensitive data or not.
+
+Include your token in every request header:
 
 ```
-Authorization: <token>
+Authorization: <your-token>
 ```
 
-If the token is missing or invalid the server will return:
+If the token is missing or invalid:
 
 ```
 401 Unauthorized
 ```
 
+See the [Authentication Guide](auth.md) for how to obtain a token.
+
 ---
 
-# Base Path
+## Base Path
 
 ```
 /view
 ```
 
+All endpoints below are relative to this base path.
+
 ---
 
-# Get Node List
+## Get Node List
 
-Returns all registered nodes connected to the Ferroscope server.
+Returns all nodes registered in the Ferroscope server.
 
 ### Endpoint
 
@@ -53,32 +64,29 @@ POST /view/get_node_list
 
 ### Request
 
-No request body required.
+No body or query parameters required.
 
 ### Response
 
-```
-200 OK
-```
+**Status:** `200 OK`
 
 ```json
 [
-  {
-    "id": 1,
-    "name": "production-server"
-  },
-  {
-    "id": 2,
-    "name": "backup-node"
-  }
+  { "id": 1, "name": "production-server" },
+  { "id": 2, "name": "backup-node" }
 ]
 ```
 
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | The node's unique numeric ID |
+| `name` | string | The node's human-readable name |
+
 ---
 
-# Get Node System Information
+## Get Node System Info
 
-Returns system information for a specific node.
+Returns hardware and OS details for a specific node.
 
 ### Endpoint
 
@@ -102,6 +110,8 @@ Example:
 
 ### Response
 
+**Status:** `200 OK`
+
 ```json
 {
   "system_name": "Linux",
@@ -113,17 +123,24 @@ Example:
 }
 ```
 
-If the node has no data:
+| Field | Type | Description |
+|-------|------|-------------|
+| `system_name` | string | OS family (e.g. `"Linux"`, `"Windows"`) |
+| `kernel_version` | string | Kernel or OS build version |
+| `os_version` | string | Full OS version string |
+| `uptime` | integer | System uptime in seconds |
+| `cpu_threads` | integer | Number of logical CPU threads |
+| `cpu_vendor` | string | CPU manufacturer (e.g. `"Intel"`, `"AMD"`) |
 
-```
-204 No Content
-```
+### Error Response
+
+**Status:** `204 No Content` — The node exists but has not reported system info yet.
 
 ---
 
-# Get Latest CPU Usage
+## Get Latest CPU Usage
 
-Returns the **latest CPU usage metric** for a node.
+Returns the single most recent CPU usage reading for a node.
 
 ### Endpoint
 
@@ -147,6 +164,8 @@ Example:
 
 ### Response
 
+**Status:** `200 OK`
+
 ```json
 {
   "value": 43.7,
@@ -154,20 +173,20 @@ Example:
 }
 ```
 
-If no data exists:
+| Field | Type | Description |
+|-------|------|-------------|
+| `value` | float | CPU usage percentage at the time of recording |
+| `date_time` | string (UTC) | Timestamp of the reading |
 
-```
-204 No Content
-```
+### Error Response
 
-
-For real-time CPU updates, refer to the [Streaming API](streaming.md).
+**Status:** `204 No Content` — No CPU data available for this node yet.
 
 ---
 
-# Get Latest RAM Usage
+## Get Latest RAM Usage
 
-Returns the most recent memory statistics for a node.
+Returns the single most recent RAM usage reading for a node.
 
 ### Endpoint
 
@@ -183,13 +202,15 @@ Query parameter:
 node=<node_id>
 ```
 
-Example
+Example:
 
 ```
 /view/get_latest_ram?node=1
 ```
 
 ### Response
+
+**Status:** `200 OK`
 
 ```json
 {
@@ -199,14 +220,21 @@ Example
 }
 ```
 
-For real-time RAM updates, refer to the [Streaming API](streaming.md).
+| Field | Type | Description |
+|-------|------|-------------|
+| `total` | string | Total RAM on the node in kilobytes |
+| `free` | string | Free/available RAM in kilobytes |
+| `timestamp` | string (UTC) | Timestamp of the reading |
 
+### Error Response
+
+**Status:** `204 No Content` — No RAM data available for this node yet.
 
 ---
 
-# CPU Usage History
+## CPU Usage History
 
-Returns the **latest 20 CPU usage records**.
+Returns the **last 20 CPU usage records** for a node, ordered from newest to oldest.
 
 ### Endpoint
 
@@ -216,7 +244,7 @@ POST /view/cpu_stat
 
 ### Request
 
-Query parameter
+Query parameter:
 
 ```
 node=<node_id>
@@ -224,24 +252,22 @@ node=<node_id>
 
 ### Response
 
+**Status:** `200 OK`
+
 ```json
 [
-  {
-    "value": 41.2,
-    "date_time": "2026-03-15T10:45:33Z"
-  },
-  {
-    "value": 38.7,
-    "date_time": "2026-03-15T10:44:33Z"
-  }
+  { "value": 41.2, "date_time": "2026-03-15T10:45:33Z" },
+  { "value": 38.7, "date_time": "2026-03-15T10:44:33Z" }
 ]
 ```
 
+Returns an empty array `[]` if no records exist yet.
+
 ---
 
-# RAM Usage History
+## RAM Usage History
 
-Returns the **latest 20 RAM usage records**.
+Returns the **last 20 RAM usage records** for a node, ordered from newest to oldest.
 
 ### Endpoint
 
@@ -251,7 +277,7 @@ POST /view/ram_stat
 
 ### Request
 
-Query parameter
+Query parameter:
 
 ```
 node=<node_id>
@@ -259,26 +285,22 @@ node=<node_id>
 
 ### Response
 
+**Status:** `200 OK`
+
 ```json
 [
-  {
-    "free": "9200000",
-    "total": "16000000",
-    "timestamp": "2026-03-15T10:45:33Z"
-  },
-  {
-    "free": "9150000",
-    "total": "16000000",
-    "timestamp": "2026-03-15T10:44:33Z"
-  }
+  { "total": "16000000", "free": "9200000", "timestamp": "2026-03-15T10:45:33Z" },
+  { "total": "16000000", "free": "9150000", "timestamp": "2026-03-15T10:44:33Z" }
 ]
 ```
 
+Returns an empty array `[]` if no records exist yet.
+
 ---
 
-# List Services on a Node
+## List Services on a Node
 
-Returns all monitored services running on a node.
+Returns all monitored services on a node, grouped by their category.
 
 ### Endpoint
 
@@ -288,7 +310,7 @@ POST /view/node_services
 
 ### Request
 
-Query parameter
+Query parameter:
 
 ```
 node=<node_id>
@@ -296,28 +318,40 @@ node=<node_id>
 
 ### Response
 
+**Status:** `200 OK`
+
+Services are returned as a map where each **key is a category name** and the value is a list of services in that category.
+
 ```json
 {
-  "Web":[
+  "Web": [
     {
       "service_name": "nginx",
-      "category":"<Host/Web>"
-    },
+      "category": "Web",
+      "ssl_exp": "2026-12-01T00:00:00Z"
+    }
   ],
-  "Host":[
-  {
-    "service_name": "postgres",
-    "category":"<Host/Web>"
-  }
+  "Host": [
+    {
+      "service_name": "postgres",
+      "category": "Host",
+      "ssl_exp": null
+    }
   ]
 }
 ```
 
+| Field | Type | Description |
+|-------|------|-------------|
+| `service_name` | string | Name of the monitored service |
+| `category` | string | Category the service belongs to (`"Web"`, `"Host"`, etc.) |
+| `ssl_exp` | string (UTC) or `null` | SSL certificate expiry time. `null` if not applicable |
+
 ---
 
-# Get Status of a Single Service
+## Get Status of a Single Service
 
-Returns the current status of a specific service.
+Returns the current status of one specific service on a node.
 
 ### Endpoint
 
@@ -325,40 +359,51 @@ Returns the current status of a specific service.
 POST /view/single_service_current_stat
 ```
 
-### Request Body
+### Request
+
+**JSON body:**
 
 ```json
 {
   "node": 1,
-  "service_name": "nginx",
+  "service_name": "nginx"
 }
 ```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `node` | integer | ✅ Yes | The node's numeric ID |
+| `service_name` | string | ✅ Yes | The exact name of the service |
 
 ### Response
 
+**Status:** `200 OK`
+
 ```json
 {
-  "status": "running",
+  "status": "up",
   "error_msg": "",
-  "category":"<Host/Web>",
-  "ssl_exp":"null_or_utc_time"
+  "category": "Web",
+  "ssl_exp": "2026-12-01T00:00:00Z"
 }
 ```
 
-e
-```
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | string | Current status of the service (e.g. `"up"`, `"down"`) |
+| `error_msg` | string | Error details if the service is down. Empty string `""` if healthy |
+| `category` | string | The service's category (`"Web"`, `"Host"`, etc.) |
+| `ssl_exp` | string (UTC) or `null` | SSL certificate expiry. `null` if not applicable |
 
-If the service is not found:
+### Error Response
 
-```
-204 No Content
-```
+**Status:** `204 No Content` — No service matching that name was found on that node.
 
 ---
 
-# Get Status of All Services
+## Get Status of All Services
 
-Returns the status of every monitored service on a node.
+Returns the current status of every monitored service on a node, grouped by category.
 
 ### Endpoint
 
@@ -368,7 +413,7 @@ POST /view/service_current_stat
 
 ### Request
 
-Query parameter
+Query parameter:
 
 ```
 node=<node_id>
@@ -376,73 +421,39 @@ node=<node_id>
 
 ### Response
 
-```json
-{
-    "Web": [
-        {
-            "service_name": "mywebsite",
-            "error_msg": "",
-            "status": "up",
-            "category": "Web",
-            "ssl_exp": [
-                2026,
-                113,
-                21,
-                53,
-                58,
-                0,
-                0,
-                0,
-                0
-            ]
-        },
-      ],
-    "HOST":[
-      {
-            "service_name": "myhost",
-            "error_msg": "",
-            "status": "up",
-            "category": "Web",
-            "ssl_exp": null
-        }
-    ]
-}
-```
-
----
-
-# Create Node
-
-Registers a new node in the Ferroscope server.
-
-The server returns an authentication token that the node should use when sending metrics.
-
-### Endpoint
-
-```
-POST /view/create_nodes
-```
-
-### Request Body
+**Status:** `200 OK`
 
 ```json
 {
-  "name": "production-node"
+  "Web": [
+    {
+      "service_name": "nginx",
+      "status": "up",
+      "error_msg": "",
+      "category": "Web",
+      "ssl_exp": "2026-12-01T00:00:00Z"
+    }
+  ],
+  "Host": [
+    {
+      "service_name": "postgres",
+      "status": "down",
+      "error_msg": "connection refused",
+      "category": "Host",
+      "ssl_exp": null
+    }
+  ]
 }
 ```
 
-### Response
+| Field | Type | Description |
+|-------|------|-------------|
+| `service_name` | string | Name of the service |
+| `status` | string | Current status (`"up"`, `"down"`) |
+| `error_msg` | string | Error details if down. Empty string `""` if healthy |
+| `category` | string | The service's category |
+| `ssl_exp` | string (UTC) or `null` | SSL certificate expiry. `null` if not applicable |
 
-```json
-{
-  "token": "e3c6c9b3-49d0-4b8e-a45e-7f6b0e7d0a8b"
-}
-```
-
-If the node creation fails:
-
-```
-409 Conflict
-```
+Returns an empty object `{}` if the node has no monitored services.
 
 ---

@@ -41,7 +41,6 @@ pub async fn __system_info(
     .execute(&db_state.db)
     .await
     .expect("failed to insert user");
-    println!("{:?}", data);
     StatusCode::OK
 }
 
@@ -133,7 +132,6 @@ pub async fn __service_monitor(
     State(db_state): State<AppState>,
     data: Json<payload::ServiceMonitor>,
 ) -> StatusCode {
-    println!("Service Monitor");
     sqlx::query(
         "INSERT INTO service_monitor (service_name,status,error_msg,node_id,category,ssl_exp) VALUES ($1,$2,$3,$4,$5,$6)
         ON CONFLICT (node_id,service_name)

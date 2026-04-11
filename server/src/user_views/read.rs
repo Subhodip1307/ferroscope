@@ -9,7 +9,7 @@ use axum::{
 use chrono::{DateTime, Utc};
 use sqlx::Row;
 use std::collections::HashMap;
-use uuid::Uuid;
+
 
 pub(super) async fn __get_node_list(
     State(db_state): State<AppState>,
@@ -203,26 +203,6 @@ pub(super) async fn __get_service_current_status(
     (StatusCode::OK, Json(grouped))
 }
 
-pub(super) async fn __create_node(
-    State(db_state): State<AppState>,
-    Json(params): Json<payloads::CreateNode>,
-) -> Result<(StatusCode, Json<get_payload::AuthToken>), StatusCode> {
-    let token = Uuid::new_v4().to_string();
-    let create = sqlx::query(
-        "INSERT INTO nodes (name,token) VALUES
-        ($1,$2);
-        ",
-    )
-    .bind(params.name)
-    .bind(&token)
-    .execute(&db_state.db)
-    .await;
-
-    if create.is_ok() {
-        return Ok((StatusCode::OK, Json(get_payload::AuthToken { token })));
-    }
-    Err(StatusCode::CONFLICT)
-}
 
 pub (super) async fn __get_event_type(
 )->Json<get_payload::__ArrayType<'static>>

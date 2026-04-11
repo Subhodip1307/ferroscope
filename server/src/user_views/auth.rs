@@ -8,7 +8,7 @@ use sqlx::Row;
 use std::collections::HashMap;
 use uuid::Uuid;
 
-pub(super) async fn login_user(
+pub(super) async fn __loginuser(
     State(db_state): State<AppState>,
     Json(cread): Json<Login>,
 ) -> Result<(StatusCode, Json<AuthToken>), Json<HashMap<&'static str, &'static str>>> {

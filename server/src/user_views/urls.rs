@@ -1,4 +1,4 @@
-use super::auth::{__change_password, __get_user_name, login_user as __loginUser};
+use super::auth;
 use super::middleware::user_auth;
 use super::streaming;
 use super::read;
@@ -11,30 +11,22 @@ use axum::{
 };
 
 
+pub fn auth_routers(app_state: AppState)->Router {
+    
+    let unprotected_auth_routers = Router::new()
+        .route("/user_login", post(auth::__loginuser));
 
-fn streaming_routers(app_state: AppState) -> Router {
-    Router::new()
-        .route("/cpu", get(streaming::stream_cpu_metrics))
-        .route("/ram", get(streaming::stream_ram_metrics))
-        .with_state(app_state)
-}
-
-fn write_routers(app_state: AppState)->Router {
-    Router::new()
-    .route("/rules", post(write::__create_notification_rules))
-    .with_state(app_state)
-
-
+    let protected_auth_routers=Router::new()
+        .route("/get_userdetails", post(auth::__get_user_name))
+        .route("/change_password", post(auth::__change_password))
+        .route_layer(from_fn_with_state(app_state.clone(), user_auth)) ;
+    
+    Router::new().merge(unprotected_auth_routers).merge(protected_auth_routers).with_state(app_state.clone())
 }
 
 
-
-pub fn view_routers(app_state: AppState) -> Router {
-    let auth_routers = Router::new()
-        .route("/user_login", post(__loginUser))
-        .with_state(app_state.clone());
-
-    let data_router = Router::new()
+fn view_routers(app_state: AppState) -> Router {
+    Router::new()
         .route("/get_node_list", post(read::__get_node_list))
         .route("/get_node_info", post(read::__get_nodeinfo))
         .route("/get_latest_cpu", post(read::__get_latest_cpu))
@@ -50,15 +42,30 @@ pub fn view_routers(app_state: AppState) -> Router {
             "/service_current_stat",
             post(read::__get_service_current_status),
         )
-        .route("/get_userdetails", post(__get_user_name))
-        .route("/change_password", post(__change_password))
-        .route("/create_nodes", post(read::__create_node))
         .route_layer(from_fn_with_state(app_state.clone(), user_auth))
-        .with_state(app_state.clone());
+        .with_state(app_state.clone())
+}
 
+fn streaming_routers(app_state: AppState) -> Router {
     Router::new()
-        .nest("/view", data_router)
-        .nest("/auth", auth_routers)
+        .route("/cpu", get(streaming::stream_cpu_metrics))
+        .route("/ram", get(streaming::stream_ram_metrics))
+        .with_state(app_state)
+}
+
+fn write_routers(app_state: AppState)->Router {
+    Router::new()
+    .route("/create_nodes", post(write::__create_node))
+    .route("/remove_nodes", post(write::__remove_node))
+    .route("/create_rules", post(write::__create_notification_rules))
+    .route_layer(from_fn_with_state(app_state.clone(), user_auth))
+    .with_state(app_state)
+}
+
+pub fn base_routers(app_state: AppState)->Router {
+      Router::new()
+        .nest("/view", view_routers(app_state.clone()))
+        .nest("/auth", auth_routers(app_state.clone()))
         .nest("/stream", streaming_routers(app_state.clone()))
         .nest("/write", write_routers(app_state))
 }

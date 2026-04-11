@@ -22,7 +22,6 @@ async fn main() {
     let conf = {
         let service_setup = set_up::ConfSetUp::new();
         service_setup.set_up().await;
-        println!("runing next");
         Arc::new(service_setup.get_config().unwrap())
     };
 
@@ -67,7 +66,6 @@ async fn main() {
             let mut tick = interval(Duration::from_secs(system_conf.get_cpu_interval()));
             loop {
                 system::send_cpu(system_conf.clone(), system_api_sender.clone()).await;
-                println!("cpu send");
                 tick.tick().await;
             }
         });
@@ -119,7 +117,8 @@ async fn queue(api_client:Arc<Client>,mut receiver:mpsc::Receiver<Payload>){
         while let Some(payload)=receiver.recv().await{
             // println!("send data for {:?}",payload);
             match api_client.post(&payload.endpoint).json(&payload.body).send().await{
-                Ok(res)=>{println!("the status code is {}",res.status());
+                Ok(res)=>{
+                    println!("the status code is {}",res.status());
                 if res.status() == StatusCode::UNAUTHORIZED {
                     println!("Invalid Access Token");
                     std::process::exit(1);

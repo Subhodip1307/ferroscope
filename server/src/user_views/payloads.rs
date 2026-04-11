@@ -36,10 +36,10 @@ enum ConditionField {
 }
 
 #[derive(Serialize,Deserialize,Debug)]
-struct Condition {
-    pub field: ConditionField,
-    pub operator: String,
-    pub value: i32,//0 for down 1 for up
+pub(super) struct Condition {
+    field: ConditionField,
+    operator: String,
+    value: i32,//0 for down 1 for up
 }
 
 #[derive(Serialize,Deserialize,Debug)]
@@ -50,22 +50,26 @@ enum NotificationChannel{
 
 #[derive(Deserialize,Debug)]
 pub enum EventType {
-    ServiceStatus,
-    SystemValue
+    CPU,
+    RAM,
+    SERVICE,
+    NODE,
 }
 impl std::fmt::Display for EventType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EventType::ServiceStatus => write!(f, "service_status"),
-            EventType::SystemValue => write!(f, "system_value"),
+            EventType::CPU => write!(f, "CPU"),
+            EventType::RAM => write!(f, "RAM"),
+            EventType::SERVICE => write!(f, "SERVICE"),
+            EventType::NODE => write!(f, "NODE"),
         }
     }
 }
 
 
 
-#[derive(Deserialize,Debug)]
-struct Notify{
+#[derive(Deserialize,Debug,Serialize)]
+pub(super)  struct Notify{
     channel:NotificationChannel,
     to:Vec<String>,
     message:String

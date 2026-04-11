@@ -2,7 +2,7 @@ mod payloads;
 mod response;
 mod urls;
 mod read;
-pub use urls::view_routers;
+pub use urls::base_routers;
 mod auth;
 mod middleware;
 pub use response::{LatestCpu, LatestRam};

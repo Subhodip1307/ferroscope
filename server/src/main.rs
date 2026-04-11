@@ -11,7 +11,7 @@ use axum::http::{Method, header, header::HeaderValue};
 use std::env;
 use tower_http::cors::AllowOrigin;
 use tower_http::cors::CorsLayer;
-use user_views::view_routers;
+use user_views::base_routers;
 mod bg_services;
 mod process;
 use tokio::sync::mpsc;
@@ -65,7 +65,7 @@ async fn main() {
     let app_state = AppState::new(pg_pool, tx);
     let app = Router::new()
         .merge(send_routers(app_state.clone()))
-        .merge(view_routers(app_state.clone()))
+        .merge(base_routers(app_state.clone()))
         .layer(cors);
     let host = env::var("HOST").unwrap_or("0.0.0.0:8000".to_string());
     bg_services::node_status_check(app_state).await;

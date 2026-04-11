@@ -35,25 +35,7 @@ If you only need the **latest metric snapshot**, see the standard API endpoints 
 
 ---
 
-<!-- # Authentication
 
-Streaming endpoints require a valid authentication token.
-
-Include the token in the request header:
-
-```
-Authorization: <token>
-```
-
-If the token is missing or invalid the server will return:
-
-```
-401 Unauthorized
-```
-
-For details on obtaining a token, see the **[Authentication Guide](authentication.md)**. 
-
---- -->
 
 # How Streaming Works
 
