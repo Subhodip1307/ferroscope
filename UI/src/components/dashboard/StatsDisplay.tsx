@@ -12,23 +12,28 @@ import {
   Copy,
   Check,
   X,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
+import { CreateRuleModal } from "./CreateRuleModal";
 
 interface StatsDisplayProps {
   totalNodes: number;
   averageCPU: number;
   totalRAM: { used: number; total: number };
+  onRefresh?: () => void;
 }
 
 export function StatsDisplay({
   totalNodes,
   averageCPU,
   totalRAM,
+  onRefresh,
 }: StatsDisplayProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
   const [nodeName, setNodeName] = useState("");
   const [token, setToken] = useState("");
   const [backendUrl, setBackendUrl] = useState("");
@@ -78,6 +83,9 @@ export function StatsDisplay({
   };
 
   const resetModal = () => {
+    if (token) {
+      onRefresh?.();
+    }
     setIsModalOpen(false);
     setNodeName("");
     setToken("");
@@ -118,7 +126,15 @@ export function StatsDisplay({
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-3">
+        <Button
+          variant="outline"
+          onClick={() => setIsRuleModalOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Bell className="h-4 w-4" />
+          Create Rule
+        </Button>
         <Button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2"
@@ -127,6 +143,11 @@ export function StatsDisplay({
           Create Node
         </Button>
       </div>
+
+      <CreateRuleModal
+        isOpen={isRuleModalOpen}
+        onClose={() => setIsRuleModalOpen(false)}
+      />
 
       <AnimatePresence>
         {isModalOpen && (

@@ -5,46 +5,58 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Cpu, HardDrive, TrendingUp, TrendingDown } from "lucide-react";
+import { Cpu, HardDrive, TrendingUp, TrendingDown, Trash2, RefreshCw } from "lucide-react";
 import { api } from "@/lib/api";
 import { parseRAM } from "@/lib/utils";
 import type { Node, CPUData, RAMData } from "@/types";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "../ui/button";
 
 
 interface NodeCardProps {
   node: Node;
   index: number;
+  onDelete?: (node: Node) => void;
 }
 
-export function NodeCard({ node, index }: NodeCardProps) {
+export function NodeCard({ node, index, onDelete }: NodeCardProps) {
   const [cpuData, setCpuData] = useState<CPUData | null>(null);
   const [ramData, setRamData] = useState<RAMData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [streamKey, setStreamKey] = useState(0);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const [cpu, ram] = await Promise.all([
-          api.getLatestCPU(node.id),
-          api.getLatestRAM(node.id),
-        ]);
-        setCpuData(cpu);
-        setRamData(ram);
-        setIsOffline(false);
-      } catch (error: any) {
-        console.error("Error fetching initial node data:", error);
-        if (error.message?.includes("503")) {
-          setIsOffline(true);
-        }
-      } finally {
-        setLoading(false);
+  const fetchNodeData = async () => {
+    try {
+      setIsRefreshing(true);
+      const [cpu, ram] = await Promise.all([
+        api.getLatestCPU(node.id),
+        api.getLatestRAM(node.id),
+      ]);
+      setCpuData(cpu);
+      setRamData(ram);
+      setIsOffline(false);
+    } catch (error: any) {
+      console.error("Error fetching node data:", error);
+      if (error.message?.includes("503")) {
+        setIsOffline(true);
       }
-    };
+    } finally {
+      setIsRefreshing(false);
+      setLoading(false);
+    }
+  };
 
-    fetchInitialData();
+  const handleManualRefresh = async () => {
+    await fetchNodeData();
+    setStreamKey(prev => prev + 1);
+  };
+
+  useEffect(() => {
+    fetchNodeData();
 
     // Connect to SSE for real-time CPU updates
     const cpuStreamUrl = api.getCPUStreamUrl(node.id);
@@ -94,7 +106,7 @@ export function NodeCard({ node, index }: NodeCardProps) {
       cpuEventSource.close();
       ramEventSource.close();
     };
-  }, [node.id]);
+  }, [node.id, streamKey]);
 
   const ramUsagePercent = ramData
     ? ((parseRAM(ramData.total) - parseRAM(ramData.free)) /
@@ -117,10 +129,39 @@ export function NodeCard({ node, index }: NodeCardProps) {
       className="h-full hover:shadow-lg transition-shadow duration-300 overflow-hidden">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold">{node.name}</CardTitle>
-            <Badge variant={isOffline ? "destructive" : (cpuStatus > 80 ? "destructive" : "secondary")}>
-              {isOffline ? "Offline" : (cpuStatus > 80 ? "High Load" : "Normal")}
-            </Badge>
+            <div className="flex flex-col">
+              <CardTitle className="text-lg font-semibold">{node.name}</CardTitle>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant={isOffline ? "destructive" : (cpuStatus > 80 ? "destructive" : "secondary")}>
+                  {isOffline ? "Offline" : (cpuStatus > 80 ? "High Load" : "Normal")}
+                </Badge>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleManualRefresh();
+                }}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.(node);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -141,6 +182,7 @@ export function NodeCard({ node, index }: NodeCardProps) {
               </span>
             </div>
             <Progress value={cpuData?.cpu ?? 0} />
+            
           </motion.div>
 
           <motion.div
