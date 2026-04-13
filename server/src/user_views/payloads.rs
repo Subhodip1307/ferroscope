@@ -1,4 +1,6 @@
 use serde::{Deserialize,Serialize};
+use sqlx::types::Json;
+use ferroscope_server::global::structure::{NotificationChannel,Condition};
 
 #[derive(Deserialize)]
 pub(super) struct Login {
@@ -29,24 +31,6 @@ pub(super) struct CreateNode {
     pub name: String,
 }
 
-#[derive(Serialize,Debug,Deserialize)]
-enum ConditionField {
-    Status,//node status
-    Value,//check certain values
-}
-
-#[derive(Serialize,Deserialize,Debug)]
-pub(super) struct Condition {
-    field: ConditionField,
-    operator: String,
-    value: i32,//0 for down 1 for up
-}
-
-#[derive(Serialize,Deserialize,Debug)]
-enum NotificationChannel{
-    Webhook,
-    Email
-}
 
 #[derive(Deserialize,Debug)]
 pub enum EventType {
@@ -69,19 +53,19 @@ impl std::fmt::Display for EventType {
 
 
 #[derive(Deserialize,Debug,Serialize)]
-pub(super)  struct Notify{
-    channel:NotificationChannel,
+pub struct Notify{
+    channel:Json<NotificationChannel>,
     to:Vec<String>,
     message:String
 }
 
 
 #[derive(Deserialize,Debug)]
-pub (super) struct RulesData {
+pub  struct RulesData {
     pub name:String,
     pub active:bool,
-    pub condition:Condition,
-    pub event_type:EventType,
-    pub action:Notify
+    pub condition:Json<Condition>,
+    pub event_type:Json<EventType>,
+    pub action:Json<Notify>
 
 }

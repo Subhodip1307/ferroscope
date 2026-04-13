@@ -18,7 +18,6 @@ pub(super) async fn user_auth(
             Ok(v) => v,
             Err(_) => return Err(StatusCode::UNAUTHORIZED),
         };
-
         let cache_key = format!("user_auth_{auth_str}");
         let out_put: (bool, i64) = match db_state.cache.get(&cache_key) {
             Some(value) => (true, value),

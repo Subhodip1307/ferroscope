@@ -56,8 +56,8 @@ pub (super) async fn __create_notification_rules(
     .bind(data.name)
     .bind(data.active)
     .bind(data.event_type.to_string())
-    .bind(sqlx::types::Json(data.condition))
-    .bind(sqlx::types::Json(data.action))
+    .bind(data.condition)
+    .bind(data.action)
     .bind(auth_user.user_id)
     .execute(&db_state.db).await;
     
