@@ -1,19 +1,48 @@
 use serde::{Deserialize,Serialize};
 use sqlx::types::Json;
 
+
+#[derive(Deserialize,Debug)]
+pub enum EventType {
+    CPU,
+    RAM,
+    SERVICE,
+    NODE,
+}
+impl std::fmt::Display for EventType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            EventType::CPU => write!(f, "CPU"),
+            EventType::RAM => write!(f, "RAM"),
+            EventType::SERVICE => write!(f, "SERVICE"),
+            EventType::NODE => write!(f, "NODE"),
+        }
+    }
+}
+
+
 pub struct NotificationData {
-    pub category: String,
+    pub category: EventType,
     pub sujbect: String,
     pub unique_id: String,
 }
 impl NotificationData {
     pub fn get_message(&self) -> String {
-        if self.category == "NODE" {
-            return format!("Node Offline {}", self.unique_id);
-        } else if self.category == "SERVICE" {
-            return format!("Service Offline {}", self.unique_id); //need to imporve
+        match self.category {
+            EventType::NODE=>format!("Node Offline {}", self.unique_id),
+            EventType::SERVICE=>format!("Service Offline {}", self.unique_id),
+            _=>  "".to_string()
         }
-        "".to_string()
+        // if self.category == "NODE" {
+        //     return format!("Node Offline {}", self.unique_id);
+        // } else if self.category == "SERVICE" {
+        //     return format!("Service Offline {}", self.unique_id); //need to imporve
+        // }
+        // "".to_string()
+    }
+
+    pub fn get_event_type(&self)->String{
+        self.category.to_string()
     }
 }
 
@@ -44,8 +73,8 @@ pub enum NotificationChannel{
 #[derive(Deserialize,Debug,Serialize,sqlx::FromRow)]
 pub struct BGNotify{
     pub channel:NotificationChannel,
-    to:Vec<String>,
-    message:String
+    pub to:Vec<String>,
+    pub message:String
 }
 
 

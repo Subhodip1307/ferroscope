@@ -62,14 +62,14 @@ async fn main() {
 
     let (tx, rx) = mpsc::channel::<ferroscope_server::global::structure::NotificationData>(20);
 
-    let app_state = AppState::new(pg_pool, tx);
+    let app_state = AppState::new(pg_pool.clone(), tx);
     let app = Router::new()
         .merge(send_routers(app_state.clone()))
         .merge(base_routers(app_state.clone()))
         .layer(cors);
     let host = env::var("HOST").unwrap_or("0.0.0.0:8000".to_string());
     bg_services::node_status_check(app_state).await;
-    bg_services::mail_sender_worker(rx).await;
+    bg_services::notification_service(pg_pool,rx).await;
     let listener = tokio::net::TcpListener::bind(&host).await.unwrap();
     println!("runing on {}", host);
     axum::serve(listener, app).await.unwrap();
