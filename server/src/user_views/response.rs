@@ -72,8 +72,7 @@ pub(super) struct ServiceStatus {
     pub ssl_exp: Option<OffsetDateTime>,
 }
 
-
-#[derive(Debug,Serialize)]
+#[derive(Debug, Serialize)]
 pub(super) struct __ArrayType<'a> {
-    pub data: Vec<&'a str>
+    pub data: Vec<&'a str>,
 }

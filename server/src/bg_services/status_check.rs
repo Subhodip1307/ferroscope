@@ -1,10 +1,9 @@
 use crate::AppState;
-use tokio::time::{Duration, interval};
 use crate::user_views::LatestCpu;
 use crate::user_views::LatestRam;
 use chrono::Utc;
-use ferroscope_server::global::structure::{NotificationData,EventType};
-
+use ferroscope_server::global::structure::{EventType, NotificationData};
+use tokio::time::{Duration, interval};
 
 pub async fn node_status_check(app_state: AppState) {
     // runing backgrond services
@@ -61,7 +60,7 @@ pub async fn node_status_check(app_state: AppState) {
                 let _ = app_state
                     .notifier
                     .send(NotificationData {
-                        category:EventType::NODE,
+                        category: EventType::NODE,
                         sujbect: "Node Status unreachable".to_string(),
                         unique_id: format!("{}", key),
                     })
@@ -70,4 +69,3 @@ pub async fn node_status_check(app_state: AppState) {
         }
     });
 }
-

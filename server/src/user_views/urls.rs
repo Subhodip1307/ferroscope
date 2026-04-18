@@ -1,7 +1,7 @@
 use super::auth;
 use super::middleware::user_auth;
-use super::streaming;
 use super::read;
+use super::streaming;
 use super::write;
 use crate::objects::AppState;
 use axum::middleware::from_fn_with_state;
@@ -10,20 +10,19 @@ use axum::{
     routing::{get, post},
 };
 
+pub fn auth_routers(app_state: AppState) -> Router {
+    let unprotected_auth_routers = Router::new().route("/user_login", post(auth::__loginuser));
 
-pub fn auth_routers(app_state: AppState)->Router {
-    
-    let unprotected_auth_routers = Router::new()
-        .route("/user_login", post(auth::__loginuser));
-
-    let protected_auth_routers=Router::new()
+    let protected_auth_routers = Router::new()
         .route("/get_userdetails", post(auth::__get_user_name))
         .route("/change_password", post(auth::__change_password))
-        .route_layer(from_fn_with_state(app_state.clone(), user_auth)) ;
-    
-    Router::new().merge(unprotected_auth_routers).merge(protected_auth_routers).with_state(app_state.clone())
-}
+        .route_layer(from_fn_with_state(app_state.clone(), user_auth));
 
+    Router::new()
+        .merge(unprotected_auth_routers)
+        .merge(protected_auth_routers)
+        .with_state(app_state.clone())
+}
 
 fn view_routers(app_state: AppState) -> Router {
     Router::new()
@@ -53,17 +52,17 @@ fn streaming_routers(app_state: AppState) -> Router {
         .with_state(app_state)
 }
 
-fn write_routers(app_state: AppState)->Router {
+fn write_routers(app_state: AppState) -> Router {
     Router::new()
-    .route("/create_nodes", post(write::__create_node))
-    .route("/remove_nodes", post(write::__remove_node))
-    .route("/create_rules", post(write::__create_notification_rules))
-    .route_layer(from_fn_with_state(app_state.clone(), user_auth))
-    .with_state(app_state)
+        .route("/create_nodes", post(write::__create_node))
+        .route("/remove_nodes", post(write::__remove_node))
+        .route("/create_rules", post(write::__create_notification_rules))
+        .route_layer(from_fn_with_state(app_state.clone(), user_auth))
+        .with_state(app_state)
 }
 
-pub fn base_routers(app_state: AppState)->Router {
-      Router::new()
+pub fn base_routers(app_state: AppState) -> Router {
+    Router::new()
         .nest("/view", view_routers(app_state.clone()))
         .nest("/auth", auth_routers(app_state.clone()))
         .nest("/stream", streaming_routers(app_state.clone()))

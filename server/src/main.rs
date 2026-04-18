@@ -69,7 +69,7 @@ async fn main() {
         .layer(cors);
     let host = env::var("HOST").unwrap_or("0.0.0.0:8000".to_string());
     bg_services::node_status_check(app_state).await;
-    bg_services::notification_service(pg_pool,rx).await;
+    bg_services::notification_service(pg_pool, rx).await;
     let listener = tokio::net::TcpListener::bind(&host).await.unwrap();
     println!("runing on {}", host);
     axum::serve(listener, app).await.unwrap();

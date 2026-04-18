@@ -1,13 +1,8 @@
 use super::payloads;
 use super::response as get_payload;
 use crate::objects::AppState;
-use axum::{
-    Json,
-    extract::{State},
-    http::StatusCode,Extension
-};
+use axum::{Extension, Json, extract::State, http::StatusCode};
 use uuid::Uuid;
-
 
 pub(super) async fn __create_node(
     State(db_state): State<AppState>,
@@ -30,28 +25,27 @@ pub(super) async fn __create_node(
     Err(StatusCode::CONFLICT)
 }
 
-
-pub (super) async  fn __remove_node(
- State(db_state): State<AppState>,
- Json(params): Json<payloads::IdQuery>,
-)->StatusCode{
-    let _=sqlx::query("delete from nodes where id =$1")
-    .bind(params.node)
-    .execute(&db_state.db).await;
+pub(super) async fn __remove_node(
+    State(db_state): State<AppState>,
+    Json(params): Json<payloads::IdQuery>,
+) -> StatusCode {
+    let _ = sqlx::query("delete from nodes where id =$1")
+        .bind(params.node)
+        .execute(&db_state.db)
+        .await;
     StatusCode::OK
 }
 
-
-pub (super) async fn __create_notification_rules(
+pub(super) async fn __create_notification_rules(
     State(db_state): State<AppState>,
     Extension(auth_user): Extension<get_payload::AuthUser>,
-    Json(data):Json<payloads::RulesData>
-)->StatusCode{
+    Json(data): Json<payloads::RulesData>,
+) -> StatusCode {
     // will add payload checking code in future
-    let create=sqlx::query(
+    let create = sqlx::query(
         "INSERT INTO rules (name,is_active,event_type,condition_json,action_json,created_by)
         VALUES ($1,$2,$3,$4,$5,$6);
-        "
+        ",
     )
     .bind(data.name)
     .bind(data.active)
@@ -59,10 +53,14 @@ pub (super) async fn __create_notification_rules(
     .bind(data.condition)
     .bind(data.action)
     .bind(auth_user.user_id)
-    .execute(&db_state.db).await;
-    
+    .execute(&db_state.db)
+    .await;
+
     match create {
-        Ok(_)=>StatusCode::CREATED,
-        Err(e)=>{println!("{e}");StatusCode::BAD_REQUEST}
+        Ok(_) => StatusCode::CREATED,
+        Err(e) => {
+            println!("{e}");
+            StatusCode::BAD_REQUEST
+        }
     }
 }

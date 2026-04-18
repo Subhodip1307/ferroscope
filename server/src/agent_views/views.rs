@@ -4,7 +4,7 @@ use crate::user_views::{LatestCpu, LatestRam};
 use axum::http::StatusCode;
 use axum::{Extension, Json, extract::State};
 use chrono::Utc;
-use ferroscope_server::global::structure::{NotificationData,EventType};
+use ferroscope_server::global::structure::{EventType, NotificationData};
 use tokio::sync::watch;
 
 pub async fn __system_info(

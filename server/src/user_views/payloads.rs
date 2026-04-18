@@ -1,6 +1,6 @@
-use serde::{Deserialize,Serialize};
+use ferroscope_server::global::structure::{Condition, NotificationChannel};
+use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
-use ferroscope_server::global::structure::{NotificationChannel,Condition};
 
 #[derive(Deserialize)]
 pub(super) struct Login {
@@ -15,7 +15,8 @@ pub(super) struct UsernamePasswordReset {
 }
 
 #[derive(Deserialize)]
-pub(super) struct IdQuery {//being used for nodeid service id or getting anyother types of id
+pub(super) struct IdQuery {
+    //being used for nodeid service id or getting anyother types of id
     pub node: i64,
 }
 
@@ -31,8 +32,7 @@ pub(super) struct CreateNode {
     pub name: String,
 }
 
-
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize, Debug)]
 pub enum EventType {
     CPU,
     RAM,
@@ -50,22 +50,18 @@ impl std::fmt::Display for EventType {
     }
 }
 
-
-
-#[derive(Deserialize,Debug,Serialize)]
-pub struct Notify{
-    channel:Json<NotificationChannel>,
-    to:Vec<String>,
-    message:String
+#[derive(Deserialize, Debug, Serialize)]
+pub struct Notify {
+    channel: Json<NotificationChannel>,
+    to: Vec<String>,
+    message: String,
 }
 
-
-#[derive(Deserialize,Debug)]
-pub  struct RulesData {
-    pub name:String,
-    pub active:bool,
-    pub condition:Json<Condition>,
-    pub event_type:Json<EventType>,
-    pub action:Json<Notify>
-
+#[derive(Deserialize, Debug)]
+pub struct RulesData {
+    pub name: String,
+    pub active: bool,
+    pub condition: Json<Condition>,
+    pub event_type: Json<EventType>,
+    pub action: Json<Notify>,
 }

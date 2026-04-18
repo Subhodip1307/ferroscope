@@ -10,7 +10,6 @@ use chrono::{DateTime, Utc};
 use sqlx::Row;
 use std::collections::HashMap;
 
-
 pub(super) async fn __get_node_list(
     State(db_state): State<AppState>,
 ) -> Result<(StatusCode, Json<Vec<get_payload::NodesList>>), StatusCode> {
@@ -203,18 +202,12 @@ pub(super) async fn __get_service_current_status(
     (StatusCode::OK, Json(grouped))
 }
 
-
-pub (super) async fn __get_event_type(
-)->Json<get_payload::__ArrayType<'static>>
-{
-    let data=Vec::from(["CPU","RAM","SERVICE","NODE"]);
-    Json(get_payload::__ArrayType{data})
+pub(super) async fn __get_event_type() -> Json<get_payload::__ArrayType<'static>> {
+    let data = Vec::from(["CPU", "RAM", "SERVICE", "NODE"]);
+    Json(get_payload::__ArrayType { data })
 }
 
-pub (super) async fn __get_notification_type(
-)->Json<get_payload::__ArrayType<'static>>
-{
-    let data=Vec::from(["webhook","email"]);
-    Json(get_payload::__ArrayType{data})
+pub(super) async fn __get_notification_type() -> Json<get_payload::__ArrayType<'static>> {
+    let data = Vec::from(["webhook", "email"]);
+    Json(get_payload::__ArrayType { data })
 }
-

@@ -1,8 +1,7 @@
-use serde::{Deserialize,Serialize};
+use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 
-
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize, Debug)]
 pub enum EventType {
     CPU,
     RAM,
@@ -20,7 +19,6 @@ impl std::fmt::Display for EventType {
     }
 }
 
-
 pub struct NotificationData {
     pub category: EventType,
     pub sujbect: String,
@@ -29,59 +27,46 @@ pub struct NotificationData {
 impl NotificationData {
     pub fn get_message(&self) -> String {
         match self.category {
-            EventType::NODE=>format!("Node Offline {}", self.unique_id),
-            EventType::SERVICE=>format!("Service Offline {}", self.unique_id),
-            _=>  "".to_string()
+            EventType::NODE => format!("Node Offline {}", self.unique_id),
+            EventType::SERVICE => format!("Service Offline {}", self.unique_id),
+            _ => "".to_string(),
         }
-        // if self.category == "NODE" {
-        //     return format!("Node Offline {}", self.unique_id);
-        // } else if self.category == "SERVICE" {
-        //     return format!("Service Offline {}", self.unique_id); //need to imporve
-        // }
-        // "".to_string()
     }
 
-    pub fn get_event_type(&self)->String{
+    pub fn get_event_type(&self) -> String {
         self.category.to_string()
     }
 }
 
-
-
-#[derive(Serialize,Debug,Deserialize)]
+#[derive(Serialize, Debug, Deserialize)]
 enum ConditionField {
-    Status,//node status
-    Value,//check certain values
+    Status, //node status
+    Value,  //check certain values
 }
 
-#[derive(Serialize,Deserialize,Debug,sqlx::FromRow)]
+#[derive(Serialize, Deserialize, Debug, sqlx::FromRow)]
 pub struct Condition {
     field: Json<ConditionField>,
     operator: String,
-    value: i32,//0 for down 1 for up
+    value: i32, //0 for down 1 for up
 }
 
-#[derive(Serialize,Deserialize,Debug)]
-pub enum NotificationChannel{
+#[derive(Serialize, Deserialize, Debug)]
+pub enum NotificationChannel {
     Webhook,
-    Email
+    Email,
 }
 
-
-
-
-#[derive(Deserialize,Debug,Serialize,sqlx::FromRow)]
-pub struct BGNotify{
-    pub channel:NotificationChannel,
-    pub to:Vec<String>,
-    pub message:String
+#[derive(Deserialize, Debug, Serialize, sqlx::FromRow)]
+pub struct BGNotify {
+    pub channel: NotificationChannel,
+    pub to: Vec<String>,
+    pub message: String,
 }
 
-
-#[derive(Deserialize,Debug,sqlx::FromRow)]
-pub  struct BGRulesData {
-    pub name:String,
-    pub condition_json:Json<Condition>,
-    pub action_json:Json<BGNotify>
-
+#[derive(Deserialize, Debug, sqlx::FromRow)]
+pub struct BGRulesData {
+    pub name: String,
+    pub condition_json: Json<Condition>,
+    pub action_json: Json<BGNotify>,
 }
