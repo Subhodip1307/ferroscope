@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Card,
   CardContent,
@@ -109,10 +110,9 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
+                  <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground z-10" />
+                  <PasswordInput
                     id="password"
-                    type="password"
                     placeholder="Enter your password"
                     className="pl-10"
                     value={password}

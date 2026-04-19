@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
   const handleRefresh = () => {
     fetchNodes();
-    toast.success("Dashboard data refreshed");
+    toast.success("Dashboard data refreshed", { closeButton: true });
   };
 
   return (
@@ -118,9 +118,10 @@ export default function DashboardPage() {
                 totalNodes={stats.totalNodes}
                 averageCPU={stats.averageCPU}
                 totalRAM={stats.totalRAM}
+                onRefresh={handleRefresh}
               />
 
-              <NodeGrid nodes={nodes} />
+              <NodeGrid nodes={nodes} onDelete={fetchNodes} />
             </motion.div>
           )}
         </AnimatePresence>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock, User, X, CheckCircle2, AlertCircle, Key } from "lucide-react";
@@ -120,11 +121,10 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess, initialUsernam
                                                 New Password
                                             </Label>
                                             <div className="relative">
-                                                <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                                                <Input
+                                                <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground z-10" />
+                                                <PasswordInput
                                                     id="modal-password"
-                                                    type="password"
-                                                    placeholder="••••••••"
+                                                    placeholder="Enter Your Password"
                                                     className="pl-10 h-11 bg-background/50 border-primary/10 transition-all font-mono"
                                                     value={password}
                                                     onChange={(e) => setPassword(e.target.value)}
