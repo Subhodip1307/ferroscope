@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, RefreshCw, LogOut, User, ChevronDown, Key } from "lucide-react";
+import {
+  Activity,
+  RefreshCw,
+  LogOut,
+  User,
+  ChevronDown,
+  Key,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -36,7 +43,10 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsProfileOpen(false);
       }
     };
@@ -58,7 +68,10 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
       >
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            >
               <Activity className="h-6 w-6 text-primary" />
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
                 Ferroscope Monitor
@@ -74,7 +87,9 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
                 disabled={isLoading}
                 className="gap-2 hidden md:flex"
               >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                />
                 Refresh
               </Button>
 
@@ -88,7 +103,9 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                     <User className="h-5 w-5" />
                   </div>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isProfileOpen ? "rotate-180" : ""}`}
+                  />
                 </Button>
 
                 <AnimatePresence>
@@ -101,8 +118,12 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
                       className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 p-1"
                     >
                       <div className="px-3 py-3 border-b border-border mb-1">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Logged in as</p>
-                        <p className="text-sm font-medium truncate">{user?.username || "Admin"}</p>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Logged in as
+                        </p>
+                        <p className="text-sm font-medium truncate">
+                          {user?.username || "Admin"}
+                        </p>
                       </div>
 
                       <div className="space-y-1">
@@ -119,7 +140,10 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
 
                         <button
                           onClick={handleLogout}
-                          className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-destructive/10 text-destructive transition-colors w-full text-left"
+                          className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg 
+  hover:bg-destructive/10 dark:hover:bg-destructive/20 
+  text-destructive dark:text-red-400 
+  transition-colors w-full text-left"
                         >
                           <LogOut className="h-4 w-4" />
                           Logout

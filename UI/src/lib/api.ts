@@ -12,6 +12,7 @@ import type {
   LoginResponse,
   UserDetails,
   ChangePasswordCredentials,
+  Rule,
 } from "@/types";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -24,6 +25,7 @@ const getBaseUrl = () => {
 
 const getApiUrl = () => `${getBaseUrl()}/view`;
 const getAuthUrl = () => `${getBaseUrl()}/auth`;
+const getWriteUrl = () => `${getBaseUrl()}/write`;
 
 const getHeaders = () => {
   const token =
@@ -142,6 +144,21 @@ export const api = {
     return (await handleResponse<ServiceStatusGrouped>(response, {})) ?? {};
   },
 
+  async getSingleServiceStatus(
+    nodeId: number,
+    serviceName: string,
+  ): Promise<ServiceStatus | null> {
+    const response = await fetch(`${getApiUrl()}/single_service_current_stat`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({
+        node: nodeId,
+        service_name: serviceName,
+      }),
+    });
+    return handleResponse<ServiceStatus>(response);
+  },
+
   async userLogin(
     credentials: LoginCredentials,
   ): Promise<LoginResponse | null> {
@@ -167,7 +184,7 @@ export const api = {
   },
 
   async getUserDetails(): Promise<UserDetails | null> {
-    const response = await fetch(`${getApiUrl()}/get_userdetails`, {
+    const response = await fetch(`${getAuthUrl()}/get_userdetails`, {
       method: "POST",
       headers: getHeaders(),
     });
@@ -175,7 +192,7 @@ export const api = {
   },
 
   async changePassword(credentials: ChangePasswordCredentials): Promise<boolean> {
-    const response = await fetch(`${getApiUrl()}/change_password`, {
+    const response = await fetch(`${getAuthUrl()}/change_password`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(credentials),
@@ -203,11 +220,29 @@ export const api = {
   },
 
   async createNode(name: string): Promise<{ token: string } | null> {
-    const response = await fetch(`${getApiUrl()}/create_nodes`, {
+    const response = await fetch(`${getWriteUrl()}/create_nodes`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify({ name }),
     });
     return handleResponse<{ token: string }>(response);
+  },
+
+  async removeNode(nodeId: number): Promise<boolean> {
+    const response = await fetch(`${getWriteUrl()}/remove_nodes`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ node: nodeId }),
+    });
+    return response.ok;
+  },
+
+  async createRule(rule: Rule): Promise<boolean> {
+    const response = await fetch(`${getWriteUrl()}/create_rules`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(rule),
+    });
+    return response.status === 201;
   },
 };

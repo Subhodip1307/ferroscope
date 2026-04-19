@@ -23,7 +23,7 @@ export interface ServiceStatus {
   status: "up" | "down";
   category: string;
   error_msg?: string;
-  ssl_exp?: number[] | null;
+  ssl_exp?: string | null;
 }
 
 export type ServiceStatusGrouped = Record<string, ServiceStatus[]>;
@@ -66,4 +66,30 @@ export interface RAMStatRaw {
   free: string;
   total: string;
   timestamp: string;
+}
+
+// ─── Rule Types ───────────────────────────────────────────────────────────────
+export type EventType = "CPU" | "RAM" | "SERVICE" | "NODE";
+
+export interface Condition {
+  field: "Status" | "Value";
+  operator: "=" | ">" | "<" | ">=" | "<=";
+  value: number;
+}
+
+export type RuleChannel = "Webhook" | "Email";
+
+export interface RuleAction {
+  channel: RuleChannel;
+  to: string[];
+  message: string;
+}
+
+export interface Rule {
+  id?: number;
+  name: string;
+  active: boolean;
+  event_type: EventType;
+  condition: Condition;
+  action: RuleAction;
 }

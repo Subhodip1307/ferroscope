@@ -53,30 +53,29 @@ export function ServiceStatusTabs({ services }: ServiceStatusTabsProps) {
 function ServiceCard({ service }: { service: ServiceStatus }) {
   const isUp = service.status === "up";
 
-  // SSL Expiry formatting: [year, dayOfYear, hour, minute, second, ...]
-  const formatSSL = (ssl?: number[] | null) => {
-    if (!ssl || ssl.length < 2) return null;
-    const [year, dayOfYear] = ssl;
-    const expiryDate = new Date(year, 0);
-    expiryDate.setDate(dayOfYear);
-    
+  // SSL Expiry formatting: ISO string or null
+  const formatSSL = (ssl?: string | null) => {
+    if (!ssl) return null;
+    const expiryDate = new Date(ssl);
+    if (isNaN(expiryDate.getTime())) return null;
+
     const now = new Date();
     const diffTime = expiryDate.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    let daysLeftText = '';
-    let urgency: 'normal' | 'warn' | 'critical' = 'normal';
+
+    let daysLeftText = "";
+    let urgency: "normal" | "warn" | "critical" = "normal";
 
     if (diffDays > 0) {
       daysLeftText = `(${diffDays} days left)`;
-      if (diffDays < 7) urgency = 'critical';
-      else if (diffDays < 30) urgency = 'warn';
+      if (diffDays < 7) urgency = "critical";
+      else if (diffDays < 30) urgency = "warn";
     } else if (diffDays === 0) {
       daysLeftText = `(Expires today)`;
-      urgency = 'critical';
+      urgency = "critical";
     } else {
       daysLeftText = `(Expired ${Math.abs(diffDays)} days ago)`;
-      urgency = 'critical';
+      urgency = "critical";
     }
 
     return {
@@ -87,7 +86,7 @@ function ServiceCard({ service }: { service: ServiceStatus }) {
       }),
       daysLeft: diffDays,
       text: daysLeftText,
-      urgency
+      urgency,
     };
   };
 
