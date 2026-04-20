@@ -22,7 +22,7 @@ impl std::fmt::Display for EventType {
 pub struct NotificationData {
     pub category: EventType,
     pub sujbect: String,
-    pub unique_id: String,
+    pub unique_id: i64,
 }
 impl NotificationData {
     pub fn get_message(&self) -> String {

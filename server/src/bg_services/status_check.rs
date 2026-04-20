@@ -62,7 +62,7 @@ pub async fn node_status_check(app_state: AppState) {
                     .send(NotificationData {
                         category: EventType::NODE,
                         sujbect: "Node Status unreachable".to_string(),
-                        unique_id: format!("{}", key),
+                        unique_id: key.clone(),
                     })
                     .await;
             } //end for

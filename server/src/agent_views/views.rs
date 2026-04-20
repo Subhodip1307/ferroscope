@@ -6,6 +6,7 @@ use axum::{Extension, Json, extract::State};
 use chrono::Utc;
 use ferroscope_server::global::structure::{EventType, NotificationData};
 use tokio::sync::watch;
+use sqlx::Row;
 
 pub async fn __system_info(
     State(db_state): State<AppState>,
@@ -132,7 +133,7 @@ pub async fn __service_monitor(
     State(db_state): State<AppState>,
     data: Json<payload::ServiceMonitor>,
 ) -> StatusCode {
-    sqlx::query(
+    let db_row=sqlx::query(
         "INSERT INTO service_monitor (service_name,status,error_msg,node_id,category,ssl_exp) VALUES ($1,$2,$3,$4,$5,$6)
         ON CONFLICT (node_id,service_name)
         DO UPDATE SET   
@@ -140,7 +141,8 @@ pub async fn __service_monitor(
             error_msg = EXCLUDED.error_msg,
             category = EXCLUDED.category,
             ssl_exp = EXCLUDED.ssl_exp,
-            updated_at = NOW();
+            updated_at = NOW()
+        RETURNING id;
         ",
     )
     .bind(&data.service_name)
@@ -149,17 +151,16 @@ pub async fn __service_monitor(
     .bind(nodes_id)
     .bind(&data.category)
     .bind(data.ssl_exp)
-    .execute(&db_state.db)
-    .await
-    .expect("failed to insert user");
-
+    .fetch_one(&db_state.db)
+    .await.expect("failed to update service data");
     if data.status == "down" {
+        println!("the status is down");
         let _ = db_state
             .notifier
             .send(NotificationData {
                 category: EventType::SERVICE,
                 sujbect: "Service is Offline".to_string(),
-                unique_id: data.service_name.to_string(),
+                unique_id: db_row.get("id"),
             })
             .await;
     };

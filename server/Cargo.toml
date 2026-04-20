@@ -25,4 +25,4 @@ tokio-stream = { version = "0.1.18", features = ["sync"] }
 futures-util = "0.3.32"
 mini-moka = "0.10.3"
 time = { version = "0.3", features = ["serde"] } 
-lettre = { version = "0.11.20" , features = ["tokio1-native-tls", "smtp-transport", "builder"] }
+lettre = {version = "0.11.20", default-features = false,features = ["tokio1-rustls-tls", "smtp-transport", "builder","pool"] }
