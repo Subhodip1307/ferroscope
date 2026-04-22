@@ -4,9 +4,13 @@ use lettre::{
 };
 use std::{env};
 use tokio::sync::mpsc;
-use super::structures::EmailBody;
+use super::structures::__MessageBody;
+use reqwest::{Client};
+use std::collections::HashMap;
 
-pub(super) async fn mail_sender_worker(mut receiver: mpsc::Receiver<EmailBody>) {
+
+
+pub(super) async fn mail_sender_worker(mut receiver: mpsc::Receiver<__MessageBody>) {
     let username = env::var("EMAIL_HOST_USER");
     let password = env::var("EMAIL_HOST_PASSWORD");
     let smtp_server = env::var("EMAIL_HOST");
@@ -27,7 +31,7 @@ pub(super) async fn mail_sender_worker(mut receiver: mpsc::Receiver<EmailBody>) 
         .build();
 
     while let Some(msg) = receiver.recv().await {
-        for recipient in msg.email_to {
+        for recipient in msg.destination {
             let email = Message::builder()
                 .from(form.parse().unwrap())
                 .to(recipient.parse().unwrap())
@@ -38,4 +42,23 @@ pub(super) async fn mail_sender_worker(mut receiver: mpsc::Receiver<EmailBody>) 
             println!("Done");
         }
     }
+}
+
+
+
+pub(super) async fn webhook_sender_worker(mut receiver: mpsc::Receiver<__MessageBody>){
+    let api_client = 
+        Client::builder()
+            .timeout(std::time::Duration::from_secs(10))
+            .build()
+            .expect("errr");
+    while let Some(msg) = receiver.recv().await {
+        let payload=HashMap::from([("Message",msg.msg)]);
+        for recipient in msg.destination {
+           if api_client.post(&recipient).json(&payload).send().await.is_err(){
+            println!("WebHook API issue: {}",recipient);
+           };   
+        }
+    }
+    
 }
