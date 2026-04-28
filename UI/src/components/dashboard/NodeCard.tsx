@@ -5,14 +5,20 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Cpu, HardDrive, TrendingUp, TrendingDown, Trash2, RefreshCw } from "lucide-react";
+import {
+  Cpu,
+  HardDrive,
+  TrendingUp,
+  TrendingDown,
+  Trash2,
+  RefreshCw,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { parseRAM } from "@/lib/utils";
 import type { Node, CPUData, RAMData } from "@/types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
-
 
 interface NodeCardProps {
   node: Node;
@@ -41,9 +47,10 @@ export function NodeCard({ node, index, onDelete }: NodeCardProps) {
       setIsOffline(false);
     } catch (error: any) {
       console.error("Error fetching node data:", error);
-      if (error.message?.includes("503")) {
-        setIsOffline(true);
-      }
+
+      setIsOffline(true);
+      setCpuData(null); // ✅ ADD THIS
+      setRamData(null); // ✅ ADD THIS
     } finally {
       setIsRefreshing(false);
       setLoading(false);
@@ -52,7 +59,7 @@ export function NodeCard({ node, index, onDelete }: NodeCardProps) {
 
   const handleManualRefresh = async () => {
     await fetchNodeData();
-    setStreamKey(prev => prev + 1);
+    setStreamKey((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -68,16 +75,16 @@ export function NodeCard({ node, index, onDelete }: NodeCardProps) {
         const newData = JSON.parse(event.data);
         setCpuData({
           cpu: newData.value,
-          timestamp: newData.date_time
+          timestamp: newData.date_time,
         });
       } catch (err) {
         console.error("Error parsing CPU stream data:", err);
       }
     };
 
-    cpuEventSource.onerror = (err) => {
-      // EventSource automatically retries.
+    cpuEventSource.onerror = () => {
       setIsOffline(true);
+      setCpuData(null); // ✅ ADD THIS
     };
 
     // Connect to SSE for real-time RAM updates
@@ -91,15 +98,16 @@ export function NodeCard({ node, index, onDelete }: NodeCardProps) {
         setRamData({
           free: newData.free,
           total: newData.total,
-          timestamp: newData.timestamp
+          timestamp: newData.timestamp,
         });
       } catch (err) {
         console.error("Error parsing RAM stream data:", err);
       }
     };
 
-    ramEventSource.onerror = (err) => {
+    ramEventSource.onerror = () => {
       setIsOffline(true);
+      setRamData(null); // ✅ ADD THIS
     };
 
     return () => {
@@ -124,16 +132,31 @@ export function NodeCard({ node, index, onDelete }: NodeCardProps) {
       whileHover={{ scale: 1.02 }}
       className="h-full"
     >
-      <Card 
-      onClick={() => router.push(`/nodes/${node.id}`)}
-      className="h-full hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+      <Card
+        onClick={() => router.push(`/nodes/${node.id}`)}
+        className="h-full hover:shadow-lg transition-shadow duration-300 overflow-hidden"
+      >
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <CardTitle className="text-lg font-semibold">{node.name}</CardTitle>
+              <CardTitle className="text-lg font-semibold">
+                {node.name}
+              </CardTitle>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant={isOffline ? "destructive" : (cpuStatus > 80 ? "destructive" : "secondary")}>
-                  {isOffline ? "Offline" : (cpuStatus > 80 ? "High Load" : "Normal")}
+                <Badge
+                  variant={
+                    isOffline
+                      ? "destructive"
+                      : cpuStatus > 80
+                        ? "destructive"
+                        : "secondary"
+                  }
+                >
+                  {isOffline
+                    ? "Offline"
+                    : cpuStatus > 80
+                      ? "High Load"
+                      : "Normal"}
                 </Badge>
               </div>
             </div>
@@ -148,7 +171,9 @@ export function NodeCard({ node, index, onDelete }: NodeCardProps) {
                 }}
                 disabled={isRefreshing}
               >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                />
               </Button>
               <Button
                 variant="ghost"
@@ -165,7 +190,9 @@ export function NodeCard({ node, index, onDelete }: NodeCardProps) {
           </div>
         </CardHeader>
 
-        <CardContent className={`space-y-4 ${isOffline ? "opacity-50 grayscale" : ""}`}>
+        <CardContent
+          className={`space-y-4 ${isOffline ? "opacity-50 grayscale" : ""}`}
+        >
           <motion.div
             className="space-y-2"
             initial={{ opacity: 0 }}
@@ -178,11 +205,10 @@ export function NodeCard({ node, index, onDelete }: NodeCardProps) {
                 <span className="font-medium">CPU Usage</span>
               </div>
               <span className="font-bold">
-                {(cpuData?.cpu ?? 0).toFixed(1)}%
+                {cpuData ? `${cpuData.cpu.toFixed(1)}%` : "N/A"}
               </span>
             </div>
             <Progress value={cpuData?.cpu ?? 0} />
-            
           </motion.div>
 
           <motion.div
@@ -197,7 +223,9 @@ export function NodeCard({ node, index, onDelete }: NodeCardProps) {
                 <span className="font-medium">RAM Usage</span>
               </div>
               <span className="text-xs text-muted-foreground font-medium">
-                {ramData ? `${(parseRAM(ramData.total) - parseRAM(ramData.free)).toFixed(2)} GiB / ${ramData.total}` : "Loading..."}
+                {ramData
+                  ? `${(parseRAM(ramData.total) - parseRAM(ramData.free)).toFixed(2)} GiB / ${ramData.total}`
+                  : "N/A"}
               </span>
             </div>
             <Progress value={ramUsagePercent} className="h-2" />
