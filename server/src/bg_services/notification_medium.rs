@@ -1,16 +1,13 @@
+use super::structures::{__MailMessageBody, __WebHookMEssageBody};
 use lettre::{
     AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
     transport::smtp::authentication::Credentials,
 };
-use std::{env};
+use reqwest::Client;
+use std::env;
 use tokio::sync::mpsc;
-use super::structures::__MessageBody;
-use reqwest::{Client};
-use std::collections::HashMap;
 
-
-
-pub(super) async fn mail_sender_worker(mut receiver: mpsc::Receiver<__MessageBody>) {
+pub(super) async fn mail_sender_worker(mut receiver: mpsc::Receiver<__MailMessageBody>) {
     let username = env::var("EMAIL_HOST_USER");
     let password = env::var("EMAIL_HOST_PASSWORD");
     let smtp_server = env::var("EMAIL_HOST");
@@ -44,21 +41,16 @@ pub(super) async fn mail_sender_worker(mut receiver: mpsc::Receiver<__MessageBod
     }
 }
 
-
-
-pub(super) async fn webhook_sender_worker(mut receiver: mpsc::Receiver<__MessageBody>){
-    let api_client = 
-        Client::builder()
-            .timeout(std::time::Duration::from_secs(10))
-            .build()
-            .expect("errr");
+pub(super) async fn webhook_sender_worker(mut receiver: mpsc::Receiver<__WebHookMEssageBody>) {
+    let api_client = Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .expect("errr");
     while let Some(msg) = receiver.recv().await {
-        let payload=HashMap::from([("Message",msg.msg)]);
         for recipient in msg.destination {
-           if api_client.post(&recipient).json(&payload).send().await.is_err(){
+           if api_client.post(&recipient).json(&msg.value).send().await.is_err(){
             println!("WebHook API issue: {}",recipient);
-           };   
+           };
         }
-    }
-    
+    } //end while
 }
