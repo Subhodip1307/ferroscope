@@ -5,8 +5,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from "@/components/ui/card";
-import { X, Bell, Save, AlertTriangle, Plus, Trash2, Mail, Globe, Settings, Activity } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  X,
+  Bell,
+  Save,
+  AlertTriangle,
+  Plus,
+  Trash2,
+  Mail,
+  Globe,
+  Settings,
+  Activity,
+} from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import type { EventType, RuleChannel, Rule } from "@/types";
@@ -17,14 +35,21 @@ interface CreateRuleModalProps {
   onSuccess?: () => void;
 }
 
-export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalProps) {
+export function CreateRuleModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: CreateRuleModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState("");
   const [active, setActive] = useState(true);
   const [eventType, setEventType] = useState<EventType>("CPU");
-  const [conditionField, setConditionField] = useState<"Status" | "Value">("Value");
-  const [conditionOperator, setConditionOperator] = useState<string>(">");
-  const [conditionValue, setConditionValue] = useState<number>(90);
+  const [conditionField, setConditionField] = useState<"Status" | "Value">(
+    "Status",
+  );
+  const [conditionOperator, setConditionOperator] = useState<string>("=");
+  const [conditionValue, setConditionValue] = useState<number>(0);
+
   const [actionChannel, setActionChannel] = useState<RuleChannel>("Webhook");
   const [actionToList, setActionToList] = useState<string[]>([]);
   const [actionToInput, setActionToInput] = useState("");
@@ -37,24 +62,14 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
     }
   }, [eventType]);
 
-  // Handle condition field changes
-  useEffect(() => {
-    if (conditionField === "Status") {
-      setConditionOperator("=");
-      setConditionValue(0); // Default to down
-    } else {
-      setConditionOperator(">");
-      setConditionValue(90);
-    }
-  }, [conditionField]);
-
   const resetForm = () => {
     setName("");
     setActive(true);
     setEventType("CPU");
-    setConditionField("Value");
-    setConditionOperator(">");
-    setConditionValue(90);
+    setConditionField("Status");
+    setConditionOperator("=");
+    setConditionValue(0);
+
     setActionChannel("Webhook");
     setActionToList([]);
     setActionToInput("");
@@ -77,7 +92,11 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       addTag();
-    } else if (e.key === "Backspace" && !actionToInput && actionToList.length > 0) {
+    } else if (
+      e.key === "Backspace" &&
+      !actionToInput &&
+      actionToList.length > 0
+    ) {
       removeTag(actionToList.length - 1);
     }
   };
@@ -100,7 +119,7 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
       if (actionToInput.trim()) {
         finalToList.push(actionToInput.trim());
       }
-      
+
       const ruleData: Rule = {
         name,
         active,
@@ -120,23 +139,31 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
       const success = await api.createRule(ruleData);
 
       if (success) {
-        toast.success("Notification rule created successfully!", { closeButton: true });
+        toast.success("Notification rule created successfully!", {
+          closeButton: true,
+        });
         resetForm();
         onSuccess?.();
         onClose();
       } else {
-        toast.error("Failed to create rule. Please try again.", { closeButton: true });
+        toast.error("Failed to create rule. Please try again.", {
+          closeButton: true,
+        });
       }
     } catch (error) {
       console.error("Create rule error:", error);
-      toast.error("An error occurred while creating the rule.", { closeButton: true });
+      toast.error("An error occurred while creating the rule.", {
+        closeButton: true,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const inputClasses = "h-11 bg-background/50 border-primary/10 transition-all focus:border-primary/30";
-  const selectClasses = "flex h-11 w-full rounded-md border border-primary/10 bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all";
+  const inputClasses =
+    "h-11 bg-background/50 border-primary/10 transition-all focus:border-primary/30";
+  const selectClasses =
+    "flex h-11 w-full rounded-md border border-primary/10 bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all";
 
   return (
     <AnimatePresence>
@@ -163,11 +190,20 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
                       <Bell className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold">Create Notification Rule</h2>
-                      <p className="text-sm text-muted-foreground">Define system event notifications</p>
+                      <h2 className="text-xl font-semibold">
+                        Create Notification Rule
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Define system event notifications
+                      </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onClose}
+                    className="rounded-full"
+                  >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -177,7 +213,12 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
                     {/* Basic Info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="rule-name" className="text-sm font-semibold text-foreground/80">Rule Name</Label>
+                        <Label
+                          htmlFor="rule-name"
+                          className="text-sm font-semibold text-foreground/80"
+                        >
+                          Rule Name
+                        </Label>
                         <Input
                           id="rule-name"
                           placeholder="e.g., High CPU Alert"
@@ -188,15 +229,22 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="event-type" className="text-sm font-semibold text-foreground/80">Event Type</Label>
+                        <Label
+                          htmlFor="event-type"
+                          className="text-sm font-semibold text-foreground/80"
+                        >
+                          Event Type
+                        </Label>
                         <select
                           id="event-type"
                           className={selectClasses}
                           value={eventType}
-                          onChange={(e) => setEventType(e.target.value as EventType)}
+                          onChange={(e) =>
+                            setEventType(e.target.value as EventType)
+                          }
                         >
-                          <option value="CPU">CPU Usage</option>
-                          <option value="RAM">RAM Usage</option>
+                          {/* <option value="CPU">CPU Usage</option> */}
+                          {/* <option value="RAM">RAM Usage</option> */}
                           <option value="SERVICE">Service Status</option>
                           <option value="NODE">Node Status</option>
                         </select>
@@ -206,7 +254,12 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
                     <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
                       <Settings className="w-4 h-4 text-primary" />
                       <div className="flex-1 flex items-center justify-between">
-                        <Label htmlFor="rule-active" className="text-sm font-medium cursor-pointer">Rule is active</Label>
+                        <Label
+                          htmlFor="rule-active"
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          Rule is active
+                        </Label>
                         <input
                           type="checkbox"
                           id="rule-active"
@@ -221,59 +274,58 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
                     <div className="space-y-4 pt-2">
                       <div className="flex items-center gap-2 border-l-2 border-amber-500 pl-3">
                         <Activity className="w-4 h-4 text-amber-500" />
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Condition</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                          Condition
+                        </h3>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-xs font-semibold text-muted-foreground">Field</Label>
+                          <Label className="text-xs font-semibold text-muted-foreground">
+                            Field
+                          </Label>
                           <select
                             className={selectClasses}
                             value={conditionField}
-                            onChange={(e) => setConditionField(e.target.value as "Status" | "Value")}
+                            disabled
                           >
-                            <option value="Value">Numeric Value</option>
                             <option value="Status">Status (Up/Down)</option>
                           </select>
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-xs font-semibold text-muted-foreground">Operator</Label>
+                          <Label className="text-xs font-semibold text-muted-foreground">
+                            Operator
+                          </Label>
                           <select
                             className={selectClasses}
                             value={conditionOperator}
-                            disabled={conditionField === "Status"}
-                            onChange={(e) => setConditionOperator(e.target.value)}
+                            disabled
                           >
                             <option value="=">=</option>
-                            {conditionField === "Value" && (
-                              <>
-                                <option value=">">&gt;</option>
-                                <option value="<">&lt;</option>
-                                <option value=">=">&gt;=</option>
-                                <option value="<=">&lt;=</option>
-                              </>
-                            )}
                           </select>
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-xs font-semibold text-muted-foreground">Value</Label>
+                          <Label className="text-xs font-semibold text-muted-foreground">
+                            Value
+                          </Label>
                           {conditionField === "Status" ? (
                             <select
                               className={selectClasses}
                               value={conditionValue}
-                              onChange={(e) => setConditionValue(Number(e.target.value))}
+                              disabled
                             >
                               <option value={0}>Down (0)</option>
-                              <option value={1}>Up (1)</option>
                             </select>
                           ) : (
                             <Input
                               type="number"
                               className={inputClasses}
                               value={conditionValue}
-                              onChange={(e) => setConditionValue(Number(e.target.value))}
+                              onChange={(e) =>
+                                setConditionValue(Number(e.target.value))
+                              }
                             />
                           )}
                         </div>
@@ -284,16 +336,24 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
                     <div className="space-y-4 pt-2">
                       <div className="flex items-center gap-2 border-l-2 border-blue-500 pl-3">
                         <Globe className="w-4 h-4 text-blue-500" />
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Action</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                          Action
+                        </h3>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-xs font-semibold text-muted-foreground">Channel</Label>
+                          <Label className="text-xs font-semibold text-muted-foreground">
+                            Channel
+                          </Label>
                           <div className="flex gap-2">
                             <Button
                               type="button"
-                              variant={actionChannel === "Webhook" ? "default" : "outline"}
+                              variant={
+                                actionChannel === "Webhook"
+                                  ? "default"
+                                  : "outline"
+                              }
                               className="flex-1 gap-2"
                               onClick={() => setActionChannel("Webhook")}
                             >
@@ -302,7 +362,11 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
                             </Button>
                             <Button
                               type="button"
-                              variant={actionChannel === "Email" ? "default" : "outline"}
+                              variant={
+                                actionChannel === "Email"
+                                  ? "default"
+                                  : "outline"
+                              }
                               className="flex-1 gap-2"
                               onClick={() => setActionChannel("Email")}
                             >
@@ -313,12 +377,19 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="action-to" className="text-xs font-semibold text-muted-foreground">
-                            {actionChannel === "Webhook" ? "Webhook URLs" : "Email Addresses"}
+                          <Label
+                            htmlFor="action-to"
+                            className="text-xs font-semibold text-muted-foreground"
+                          >
+                            {actionChannel === "Webhook"
+                              ? "Webhook URLs"
+                              : "Email Addresses"}
                           </Label>
-                          <div 
+                          <div
                             className="max-h-[120px] overflow-y-auto p-1.5 bg-background/50 border border-primary/10 rounded-md flex flex-wrap gap-2 transition-all focus-within:border-primary/30 cursor-text custom-scrollbar"
-                            onClick={() => document.getElementById("action-to")?.focus()}
+                            onClick={() =>
+                              document.getElementById("action-to")?.focus()
+                            }
                           >
                             <AnimatePresence>
                               {actionToList.map((tag, idx) => (
@@ -329,7 +400,9 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
                                   exit={{ opacity: 0, scale: 0.8 }}
                                   className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 border border-primary/20 rounded-md text-sm text-primary"
                                 >
-                                  <span className="max-w-[150px] truncate">{tag}</span>
+                                  <span className="max-w-[150px] truncate">
+                                    {tag}
+                                  </span>
                                   <button
                                     type="button"
                                     onClick={() => removeTag(idx)}
@@ -344,19 +417,32 @@ export function CreateRuleModal({ isOpen, onClose, onSuccess }: CreateRuleModalP
                               id="action-to"
                               type="text"
                               className="flex-1 bg-transparent border-none outline-none text-sm min-w-[120px] h-7"
-                              placeholder={actionToList.length === 0 ? (actionChannel === "Webhook" ? "https://hooks.slack.com/..." : "admin@example.com") : ""}
+                              placeholder={
+                                actionToList.length === 0
+                                  ? actionChannel === "Webhook"
+                                    ? "https://hooks.slack.com/..."
+                                    : "admin@example.com"
+                                  : ""
+                              }
                               value={actionToInput}
                               onChange={(e) => setActionToInput(e.target.value)}
                               onKeyDown={handleKeyDown}
                               onBlur={addTag}
                             />
                           </div>
-                          <p className="text-[10px] text-muted-foreground mt-1">Press Enter or comma to add multiple</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            Press Enter or comma to add multiple
+                          </p>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="action-message" className="text-sm font-semibold text-foreground/80">Message Body</Label>
+                        <Label
+                          htmlFor="action-message"
+                          className="text-sm font-semibold text-foreground/80"
+                        >
+                          Message Body
+                        </Label>
                         <textarea
                           id="action-message"
                           rows={3}
