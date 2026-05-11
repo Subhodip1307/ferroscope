@@ -22,36 +22,6 @@ impl __Memory {
         &self.total
     }
 }
-// pub struct __Cprocesses {
-//     // current process info
-//     running_process: Option<u32>,
-//     blocked_process: Option<u32>,
-//     total_process: u64,
-// }
-// impl __Cprocesses {
-//     pub fn new(
-//         running_process: Option<u32>,
-//         blocked_process: Option<u32>,
-//         total_process: u64,
-//     ) -> Self {
-//         Self {
-//             running_process,
-//             blocked_process,
-//             total_process,
-//         }
-//     }
-//     pub fn runinng(&self) -> u32 {
-//         self.running_process.unwrap_or(0)
-//     }
-
-//     pub fn blocked(&self) -> u32 {
-//         self.blocked_process.unwrap_or(0)
-//     }
-
-//     pub fn total(&self) -> u64 {
-//         self.total_process
-//     }
-// }
 
 #[derive(Serialize)]
 pub struct __SysInfo {
@@ -61,4 +31,13 @@ pub struct __SysInfo {
     pub uptime: u64,
     pub cpu_threads: usize,
     pub cpu_vendor: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct __DiskStats {
+   pub name: String,
+    pub reads_completed: u64,
+    pub sectors_read: u64,
+    pub writes_completed: u64,
+    pub sectors_written: u64,
 }

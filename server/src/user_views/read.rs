@@ -203,7 +203,7 @@ pub(super) async fn __get_service_current_status(
 }
 
 pub(super) async fn __get_event_type() -> Json<get_payload::__ArrayType<'static>> {
-    let data = Vec::from(["CPU", "RAM", "SERVICE", "NODE"]);
+    let data = Vec::from(["SERVICE", "NODE"]);
     Json(get_payload::__ArrayType { data })
 }
 

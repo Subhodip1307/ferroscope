@@ -1,8 +1,8 @@
 services:
   project:
-    image: ferroscope-ui
+    image: subhodip1307/ferroui-test:part3
     restart: always
     ports:
       - "3000:3000"
     environment:
-      - BASE_URL=
+      - NEXT_PUBLIC_BASE_URL=https://ferroscopebackend.viksun.net

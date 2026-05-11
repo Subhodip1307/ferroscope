@@ -47,7 +47,8 @@ cpu_interval = 60
 uptime_interval=600
 ram_interval = 60  
 web_interval = 60  
-host_interval = 60         
+host_interval = 60
+disk_io=60         
             "#;
             let _ = fs::write(parrent_dir.join("agent.toml"), bufer_data).await;
             println!(
@@ -88,6 +89,7 @@ pub struct BaseConFig {
     web_interval: u64,
     host_interval: u64,
     uptime_interval: u64,
+    disk_io:Option<u64>
 }
 
 impl BaseConFig {
@@ -123,5 +125,12 @@ impl BaseConFig {
 
     pub fn get_uptime_interval(&self) -> u64 {
         self.uptime_interval
+    }
+
+    pub fn get_disk_io_interval(&self)->u64{
+        if let Some(disk_io_time)=self.disk_io{
+            return disk_io_time;
+        }
+        60
     }
 }
