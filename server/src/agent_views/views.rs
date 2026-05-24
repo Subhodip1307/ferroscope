@@ -1,12 +1,15 @@
+use std::sync::Arc;
+
 use super::objects as payload;
-use crate::objects::AppState;
-use crate::user_views::{LatestCpu, LatestRam};
+use crate::objects::{AppState,StreamPayLoad};
+use crate::user_views::{LatestCpu, LatestRam,NodeDiskIoStats};
 use axum::http::StatusCode;
 use axum::{Extension, Json, extract::State};
 use chrono::Utc;
 use ferroscope_server::global::structure::{EventType, NotificationData};
 use sqlx::Row;
 use tokio::sync::watch;
+
 
 pub async fn __system_info(
     State(db_state): State<AppState>,
@@ -71,19 +74,19 @@ pub async fn __cpu_metrix(
     let node_key = format!("node_cpu_strem_{nodes_id}");
 
     db_state
-        .cpu_strem
+        .stream_data
         .entry(node_key)
         .and_modify(|sender| {
-            let _ = sender.send(LatestCpu {
+            let _ = sender.send(  StreamPayLoad::Cpu( LatestCpu {
                 value: data.cpu,
                 date_time: Utc::now(),
-            });
+            }));
         })
         .or_insert({
-            let (tx, _) = watch::channel(LatestCpu {
+            let (tx, _) = watch::channel(StreamPayLoad::Cpu( LatestCpu {
                 value: data.cpu,
                 date_time: Utc::now(),
-            });
+            }));
             tx
         });
     StatusCode::OK
@@ -109,22 +112,22 @@ pub async fn __memory_metrix(
     }
 
     let node_key = format!("node_ram_strem_{nodes_id}");
-    if db_state.ram_strem.contains_key(&node_key) {
-        let tx = db_state.ram_strem.get(&node_key).unwrap();
-        let _ = tx.send(LatestRam {
+    db_state.stream_data.entry(node_key)
+    .and_modify(|tx|{
+        _=tx.send(StreamPayLoad::Ram(LatestRam {
             timestamp: Utc::now(),
             free: data.free.clone(),
             total: data.total.clone(),
-        });
-    } else {
-        let (tx, _) = watch::channel(LatestRam {
+        }));
+    })
+    .or_insert_with(||{
+        let (tx, _) = watch::channel(StreamPayLoad::Ram(LatestRam {
             timestamp: Utc::now(),
             free: data.free.clone(),
             total: data.total.clone(),
-        });
-        db_state.ram_strem.insert(node_key, tx);
-    };
-
+        }));
+        tx
+    });
     StatusCode::OK
 }
 
@@ -190,4 +193,23 @@ pub async fn __helth_check(Extension(nodes_id): Extension<i64>, State(db_state):
         .entry(key)
         .and_modify(|v| *v = current)
         .or_insert(current);
+}
+
+
+pub async fn __disk_io(
+    Extension(nodes_id): Extension<i64>, State(db_state): State<AppState>,
+    data:Json<Vec<ferroscope_server::global::structure::DiskIoStats>>
+){
+    let all_disk:Arc<Vec<NodeDiskIoStats>>=Arc::new(data.0.into_iter().map(|i|NodeDiskIoStats{read:i.read,write:i.write,timestamp:Utc::now()}).collect());
+    let node_key = format!("node_diskio_strem_{nodes_id}");
+    db_state.stream_data.entry(node_key)
+    .and_modify(|tx|{
+        _=tx.send(StreamPayLoad::Disk(all_disk.clone()));
+    })
+    .or_insert_with(||{
+        let (tx, _) = watch::channel(StreamPayLoad::Disk(
+            all_disk
+        ));
+        tx
+    });
 }

@@ -5,6 +5,6 @@ mod urls;
 pub use urls::base_routers;
 mod auth;
 mod middleware;
-pub use response::{LatestCpu, LatestRam};
+pub use response::{LatestCpu, LatestRam,NodeDiskIoStats};
 mod streaming;
 mod write;

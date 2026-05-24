@@ -34,10 +34,18 @@ pub struct __SysInfo {
 }
 
 #[derive(Debug, Clone)]
-pub struct __DiskStats {
+pub struct __DiskData {
    pub name: String,
     pub reads_completed: u64,
     pub sectors_read: u64,
     pub writes_completed: u64,
     pub sectors_written: u64,
+}
+
+#[derive(Serialize)]
+// payloads
+pub struct __DiskIoStats{
+    pub name:String,
+    pub read:f64,
+    pub write:f64
 }

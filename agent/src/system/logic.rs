@@ -1,5 +1,5 @@
 use crate::system::structures::__SysInfo;
-use crate::system::structures::{/*__Cprocesses,*/ __Memory,__DiskStats};
+use crate::system::structures::{/*__Cprocesses,*/ __Memory,__DiskData,__DiskIoStats};
 use anyhow;
 use procfs::Current;
 use procfs::CurrentSI;
@@ -87,7 +87,7 @@ pub fn get_uptime() -> anyhow::Result<u64> {
 
 
 
-fn read_diskstats() -> Vec<__DiskStats> {
+fn read_diskstats() -> Vec<__DiskData> {
     let content = fs::read_to_string("/proc/diskstats").expect("Cannot read /proc/diskstats");
 
     content
@@ -100,20 +100,18 @@ fn read_diskstats() -> Vec<__DiskStats> {
             let name = fields[2].to_string();
 
             // Filter: keep only whole disks (sda, nvme0n1, vda, hda, xvda)
-            // Skip partitions like sda1, nvme0n1p1
-            let is_disk = (name.starts_with("sd")
-                || name.starts_with("nvme")
-                || name.starts_with("vd")
-                || name.starts_with("hd")
-                || name.starts_with("xvd"))
-                && !name.chars().last().unwrap_or('x').is_ascii_digit()
-                || name.starts_with("nvme") && name.contains("n") && !name.contains("p");
+          let is_disk = name.starts_with("nvme") && name.contains("n") && !name.contains("p")
+    || (name.starts_with("sd")
+        || name.starts_with("vd")
+        || name.starts_with("hd")
+        || name.starts_with("xvd"))
+        && !name.chars().last().unwrap_or('x').is_ascii_digit();
 
             if !is_disk {
                 return None;
             }
 
-            Some(__DiskStats {
+            Some(__DiskData {
                 name,
                 reads_completed: fields[3].parse().unwrap_or(0),
                 sectors_read: fields[5].parse().unwrap_or(0),
@@ -125,11 +123,11 @@ fn read_diskstats() -> Vec<__DiskStats> {
 }
 
 fn calculate_speed(
-    before: &[__DiskStats],
-    after: &[__DiskStats],
+    before: &[__DiskData],
+    after: &[__DiskData],
     elapsed_secs: f64,
 ) -> Vec<(String, f64, f64)> {
-    let before_map: HashMap<&str, &__DiskStats> =
+    let before_map: HashMap<&str, &__DiskData> =
         before.iter().map(|d| (d.name.as_str(), d)).collect();
 
     after
@@ -153,7 +151,8 @@ fn calculate_speed(
         .collect()
 }
 
-pub async fn get_disk_io()->Vec<(String,f64,f64)>{
+pub async fn get_disk_io()->Vec<__DiskIoStats>{
+    // returns [(Disk_name,read_MB,write_MB)]
      // Snapshot 1
     let snapshot1 = read_diskstats();
     // let disk_count = snapshot1.len();
@@ -163,9 +162,9 @@ pub async fn get_disk_io()->Vec<(String,f64,f64)>{
 
     // Snapshot 2
     let snapshot2 = read_diskstats();
-    calculate_speed(&snapshot1, &snapshot2, elapsed)
+    let data= calculate_speed(&snapshot1, &snapshot2, elapsed)
+    .iter().map(|row|__DiskIoStats{name:row.0.clone(),read:row.1,write:row.2}).collect()
+    ;
+    data
 
-    // for (name, read_mb, write_mb) in &speeds {
-    //     println!("{:<15} {:>14.2} {:>14.2}", name, read_mb, write_mb);
-    // }
 }

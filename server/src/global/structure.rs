@@ -1,3 +1,5 @@
+use std::clone;
+
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 
@@ -69,4 +71,11 @@ pub struct BGRulesData {
     pub name: String,
     pub condition_json: Json<Condition>,
     pub action_json: Json<BGNotify>,
+}
+
+#[derive(Clone,Deserialize, Debug)]
+pub struct DiskIoStats{
+    pub name:String,
+    pub read:f64,
+    pub write:f64
 }

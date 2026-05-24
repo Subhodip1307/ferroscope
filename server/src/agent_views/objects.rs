@@ -37,3 +37,4 @@ pub(super) struct SysInfo {
 pub(super) struct UpdateUptime {
     pub uptime_sec: i64,
 }
+

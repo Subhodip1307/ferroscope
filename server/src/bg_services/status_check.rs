@@ -1,4 +1,5 @@
 use crate::AppState;
+use crate::objects::StreamPayLoad;
 use crate::user_views::LatestCpu;
 use crate::user_views::LatestRam;
 use chrono::Utc;
@@ -31,40 +32,15 @@ pub async fn node_status_check(app_state: AppState) {
                 }
             } //end for remove dashmap lock
 
-            for key in &key_vec {
+            for key in key_vec {
                 // remove the key
-                app_data.helth_check.remove(key);
-
                 let cpu_ket = &format!("node_cpu_strem_{}", key);
-                if let Some(cpu_listender) = app_data.cpu_strem.get(cpu_ket) {
-                    let _ = cpu_listender.send(LatestCpu {
-                        value: -100.0,
-                        date_time: Utc::now(),
-                    });
-                    // removes the key also
-                    drop(cpu_listender); //dropping the lock
-                    app_data.cpu_strem.remove(cpu_ket);
-                };
-                // remove the ram stream and cpu stream
                 let ram_key = &format!("node_ram_strem_{}", key);
-                if let Some(ram_listender) = app_data.ram_strem.get(ram_key) {
-                    let _ = ram_listender.send(LatestRam {
-                        free: String::from("STOP"),
-                        total: String::new(),
-                        timestamp: Utc::now(),
-                    });
-                    drop(ram_listender);
-                    app_data.ram_strem.remove(ram_key);
-                };
-                //  Send Notification
-                let _ = app_state
-                    .notifier
-                    .send(NotificationData {
-                        category: EventType::NODE,
-                        sujbect: "Node Status unreachable".to_string(),
-                        unique_id: key.clone(),
-                    })
-                    .await;
+                let disk_key = &format!("node_diskio_strem_{}", key);
+                 app_data.stream_data.remove(cpu_ket);
+                 app_data.stream_data.remove(ram_key);
+                 app_data.stream_data.remove(disk_key);
+            
             } //end for
         }
     });

@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use serde::Serialize;
+use serde::{Serialize};
 use time::OffsetDateTime;
 
 #[derive(Clone, Serialize)]
@@ -75,4 +75,12 @@ pub(super) struct ServiceStatus {
 #[derive(Debug, Serialize)]
 pub(super) struct __ArrayType<'a> {
     pub data: Vec<&'a str>,
+}
+
+#[derive(Serialize, Debug,Clone)]
+pub struct NodeDiskIoStats{
+   pub read:f64,
+   pub write:f64,
+   pub timestamp: DateTime<Utc>,
+
 }
