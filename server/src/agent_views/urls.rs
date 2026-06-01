@@ -15,6 +15,7 @@ pub fn send_routers(app_state: AppState) -> Router {
         .route("/send_service", post(views::__service_monitor))
         .route("/send_uptime", post(views::__update_uptime))
         .route("/helth_check", get(views::__helth_check))
+        .route("/send_disk_io", post(views::__disk_io))
         .route_layer(from_fn_with_state(app_state.clone(), agent_auth_middleware))
         .with_state(app_state)
 }

@@ -165,6 +165,7 @@ pub async fn get_disk_io()->Vec<__DiskIoStats>{
     let data= calculate_speed(&snapshot1, &snapshot2, elapsed)
     .iter().map(|row|__DiskIoStats{name:row.0.clone(),read:row.1,write:row.2}).collect()
     ;
+    println!("sending disk data");
     data
 
 }

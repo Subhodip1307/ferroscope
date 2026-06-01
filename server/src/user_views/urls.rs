@@ -49,6 +49,7 @@ fn streaming_routers(app_state: AppState) -> Router {
     Router::new()
         .route("/cpu", get(streaming::stream_cpu_metrics))
         .route("/ram", get(streaming::stream_ram_metrics))
+        .route("/disk", get(streaming::stream_disk_metrix))
         .with_state(app_state)
 }
 

@@ -56,6 +56,7 @@ pub async fn spawn_info_sender(conf:Arc<BaseConFig>,tx:tokio::sync::mpsc::Sender
         tick.tick().await;
         }
     });
+    }
 
     // disk io
     {
@@ -66,16 +67,13 @@ pub async fn spawn_info_sender(conf:Arc<BaseConFig>,tx:tokio::sync::mpsc::Sender
 
         let mut tick = interval(Duration::from_secs(disk_conf.get_disk_io_interval()));
         loop {
-        let data=HashMap::from([("data",logic::get_disk_io().await)]);
-        system_api_sender.send(Payload { endpoint:base_url.clone() , body: json!(data) }).await.unwrap();
+        // let data=HashMap::from([("data",)]);
+        system_api_sender.send(Payload { endpoint:base_url.clone() , body: json!(logic::get_disk_io().await) }).await.unwrap();
         tick.tick().await;
         }
         });
 
     }
-
-   
-
     // helth api
     let system_conf: Arc<set_up::BaseConFig> = conf.clone();
     let mut tick = interval(Duration::from_secs(10));
@@ -83,7 +81,7 @@ pub async fn spawn_info_sender(conf:Arc<BaseConFig>,tx:tokio::sync::mpsc::Sender
             let _=api_client.get(&format!("{}/helth_check",system_conf.get_server_url())).send().await;
             tick.tick().await;
     }
-    }
+    
 
 }
 

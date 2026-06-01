@@ -23,12 +23,19 @@ pub(super) async fn agent_auth_middleware(
         let out_put: (bool, i64) = match db_state.cache.get(&cache_key) {
             Some(value) => (true, value),
             None => {
+                #[cfg(feature = "disable_auth")]
+                let fetch_data = sqlx::query("SELECT id FROM nodes limit 1")
+                    .fetch_optional(&db_state.db)
+                    .await
+                    .unwrap();
+                #[cfg(not(feature = "disable_auth"))]
                 let fetch_data = sqlx::query("SELECT id FROM nodes where token=$1")
                     .persistent(true)
                     .bind(auth_str)
                     .fetch_optional(&db_state.db)
                     .await
                     .unwrap();
+
                 let out_put: (bool, i64) = match fetch_data {
                     Some(value) => {
                         let user_pk = value.get("id");

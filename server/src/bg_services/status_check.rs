@@ -1,9 +1,4 @@
 use crate::AppState;
-use crate::objects::StreamPayLoad;
-use crate::user_views::LatestCpu;
-use crate::user_views::LatestRam;
-use chrono::Utc;
-use ferroscope_server::global::structure::{EventType, NotificationData};
 use tokio::time::{Duration, interval};
 
 pub async fn node_status_check(app_state: AppState) {
