@@ -1,23 +1,41 @@
 # FerroScope
 
+![Language](https://img.shields.io/badge/built%20with-Rust-orange)
+![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
+
 ## Introduction
 
-**FerroScope** is a **distributed system monitoring platform written in Rust** designed to provide real-time visibility into servers and services while remaining lightweight, secure, and easy to operate.
+**FerroScope** is a **lightweight, distributed system monitoring platform written in Rust**. It follows a simple **client–server architecture** and is built to give you real-time visibility into your servers and services while staying resource-efficient, secure, and effortless to set up.
 
-The primary goal of FerroScope is to offer a monitoring solution that is **simple to install, minimal in resource usage, and easy to integrate**, without the complexity of traditional enterprise monitoring systems.
+The goal of FerroScope is to offer monitoring that is **simple to install, light on resources, and quick to configure** — without the complexity and infrastructure overhead of traditional enterprise monitoring systems.
 
 FerroScope is built with a focus on:
 
-- Lightweight architecture
+- Resource-optimized, lightweight architecture
 - Minimal system resource usage
 - Simple installation and configuration
 - Real-time system and service monitoring
-- Minimal attack surface
-- API-first design for custom dashboards and integrations
+- Built-in alerting and notifications
+- Minimal attack surface and secure communication
 
-The Ferroscope server exposes a **public API**, allowing developers to build their own monitoring dashboards, automation tools, or integrations.
+---
+> 📦 **Want to deploy FerroScope?** See the **[Deployment Guide](DEPLOYMENT.md)**.
 
-For API usage and integration details, see the **[API Documentation](API-DOCS/README.md)**.
+
+## Notifications
+
+FerroScope doesn't just collect metrics — it tells you the moment something goes wrong. Built-in notifications keep you informed about the health of your infrastructure in real time.
+
+You can get notified for events such as:
+
+- **Node down** — an agent stops reporting or a monitored machine goes offline
+- **Node recovered** — a previously down node comes back online
+- **Service down** — a monitored service becomes unavailable
+- **Service recovered** — a service is back up
+- **SSL/TLS certificate expiry** — advance warnings before certificates expire, so you can renew in time
+
+This means you find out about outages and expiring certificates *before* they turn into bigger problems.
 
 ---
 
@@ -25,75 +43,69 @@ For API usage and integration details, see the **[API Documentation](API-DOCS/RE
 
 🚧 **Work in Progress**
 
-FerroScope is currently under heavy development and active testing.  
-Core features are being implemented and refined, and the architecture may evolve as the project matures.
+FerroScope is under active development and testing. Core features are implemented and continually being refined, and the architecture may evolve as the project matures.
 
 Planned improvements include:
 
 - Additional system metrics
 - More service monitoring capabilities
 - Improved distributed node communication
+- Expanded notification channels and rules
 - Performance optimizations
-- Web-based monitoring interface
-- Alerting and notification support
+- A richer web-based monitoring interface
 
 ---
 
-
 ## Features
 
-FerroScope is designed with simplicity and efficiency in mind. The system focuses on delivering essential monitoring capabilities while remaining lightweight and easy to operate.
+FerroScope is designed around simplicity and efficiency, delivering the essentials of monitoring while staying lightweight and easy to operate.
 
 Current and planned features include:
 
-- Distributed node monitoring
-- Lightweight monitoring agents
+- Distributed, multi-node monitoring
+- Lightweight monitoring agents written in Rust
 - Real-time system metrics (CPU, RAM, etc.)
 - Service availability monitoring
-- Live metric streaming using Server-Sent Events (SSE)
-- API-first architecture for custom dashboards
+- Real-time metric streaming using Server-Sent Events (SSE)
+- Built-in alerting and notifications (node/service downtime, SSL/TLS expiry, and more)
 - Simple node registration and management
+- Secure token-based authentication
 - Minimal configuration requirements
 - Low system resource consumption
-- Secure token-based authentication
 
-The project is actively evolving and additional monitoring features will be added over time.
+The project is actively evolving, and additional monitoring features will be added over time.
 
 ---
 
 ## Architecture
 
-FerroScope follows a **distributed monitoring architecture** consisting of two primary components:
+FerroScope follows a **distributed client–server architecture** consisting of two primary components.
 
-### Ferroscope Server
+### FerroScope Server
 
 The server acts as the **central monitoring hub**.
 
 Responsibilities include:
 
-- Receiving metrics from nodes
+- Receiving metrics from agents
 - Storing monitoring data
 - Managing registered nodes
-- Tracking service health
-- Exposing APIs for dashboards and integrations
+- Tracking service and node health
+- Evaluating alert conditions and dispatching notifications
 - Providing real-time metric streaming
-
-The server exposes a **REST API and streaming endpoints**, allowing developers to build their own monitoring dashboards, automation tools, or integrations.
-
----
 
 ### Monitoring Agent
 
-Each monitored machine runs a **FerroScope Agent**.
+Each monitored machine runs a **FerroScope Agent**, the client side of the system.
 
 The agent is responsible for:
 
 - Collecting system metrics
 - Monitoring configured services
-- Sending monitoring data to the Ferroscope server
+- Sending monitoring data to the FerroScope server
 - Maintaining a lightweight and efficient footprint
 
-The agent is designed with the following principles:
+The agent is designed around the following principles:
 
 - **Minimal resource usage**
 - **Minimal network noise**
@@ -107,21 +119,22 @@ Agents are intentionally built to generate **as little monitoring overhead as po
 
 ## Why FerroScope?
 
-Many monitoring systems are powerful but often come with significant complexity and infrastructure overhead.
+Many monitoring systems are powerful but come with significant complexity and infrastructure overhead.
 
 FerroScope aims to provide a simpler alternative by focusing on:
 
-- Easy installation
-- Lightweight architecture
+- Easy installation and setup
+- Resource-optimized, lightweight architecture
 - Minimal configuration
-- Developer-friendly APIs
 - Real-time monitoring capabilities
+- Built-in alerting so you're notified the moment something breaks
 - Low operational overhead
 
-The project is designed to be **developer-friendly**, allowing teams to easily build custom monitoring dashboards or integrations on top of the Ferroscope API.
-
+The result is a monitoring system you can stand up quickly and run without babysitting.
 
 ---
+
+
 
 ## Creator
 
@@ -145,3 +158,10 @@ The project is designed to be **developer-friendly**, allowing teams to easily b
 <td align="center">Web UI Development</td>
 </tr>
 </table>
+
+---
+
+
+## License
+
+FerroScope is licensed under the **Apache-2.0 License**. See the [LICENSE](LICENSE) file for details.

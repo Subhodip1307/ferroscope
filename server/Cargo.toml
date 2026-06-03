@@ -31,3 +31,11 @@ serde_json = "1.0.149"
 
 [features]
 disable_auth=[]
+
+[[bin]]
+name="ferroscope-server"
+path="src/main.rs"
+
+[[bin]]
+name="fero"
+path="src/bin/fero.rs"
