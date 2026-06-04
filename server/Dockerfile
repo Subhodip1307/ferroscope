@@ -1,12 +1,6 @@
 FROM rust:1.93.1-alpine3.23 AS builder
 WORKDIR /code/
-
-COPY Cargo.toml Cargo.lock ./
-RUN mkdir src && echo "fn main() {}" > src/main.rs
-RUN cargo build --release
-RUN rm -rf src
-
-COPY src ./src
+COPY . .
 RUN cargo build --release
 
 FROM alpine:3.23 AS runner

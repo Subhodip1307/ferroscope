@@ -7,7 +7,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-URL="https://github.com/Subhodip1307/ferroscope/releases/download/v0.1.0/x86_64-unknown-linux-musl.tar.gz"
+URL="https://github.com/Subhodip1307/ferroscope/releases/download/v0.2.0/x86_64-unknown-linux-musl.tar.gz"
 FILE="ferroscope.tar.gz"
 echo "Downloading..."
 cd /usr/local/bin

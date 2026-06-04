@@ -15,6 +15,7 @@ struct Payload {
 
 #[tokio::main]
 async fn main() {
+    println!("Runing Version : {}",env!("CARGO_PKG_VERSION"));
     // set-up
     let conf = {
         let service_setup = set_up::ConfSetUp::new();

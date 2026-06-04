@@ -20,8 +20,9 @@ FerroScope is built with a focus on:
 - Minimal attack surface and secure communication
 
 ---
-> 📦 **Want to deploy FerroScope?** See the **[Deployment Guide](DEPLOYMENT.md)**.
-
+> 📦 **Want to deploy FerroScope?**
+> - Server & Web UI → **[Deployment Guide](server/SERVER.md)**
+> - Monitoring Agent → **[Agent Deployment Guide](agent/AGENT.MD)**
 
 ## Notifications
 

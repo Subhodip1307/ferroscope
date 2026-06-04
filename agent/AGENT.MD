@@ -1,5 +1,28 @@
 # Ferroscope Agent
 
+**Contents**
+
+1. [Overview](#overview)
+2. [Architecture Principles](#architecture-principles)
+3. [Core Capabilities](#core-capabilities)
+   - [System Telemetry](#system-telemetry)
+4. [Installation & Deployment](#installation--deployment)
+   - [Step 1 — Run the installer](#step-1--run-the-installer)
+   - [Step 2 — Create a node in the web UI](#step-2--create-a-node-in-the-web-ui)
+   - [Step 3 — Configure the agent](#step-3--configure-the-agent)
+   - [Step 4 — Start the agent](#step-4--start-the-agent)
+   - [Tuning the agent](#tuning-the-agent-optional)
+5. [Task Execution System](#task-execution-system)
+6. [Configuration](#configuration)
+   - [Directory Structure](#directory-structure)
+   - [Web Checking Configuration](#web-checking-configuration)
+   - [Host Checking Configuration](#host-checking-configuration)
+   - [Important Notes](#important-notes)
+7. [Security Considerations](#security-considerations)
+8. [Roadmap](#roadmap)
+
+---
+
 ## Overview
 
 Ferroscope Agent is a  Linux-based system monitoring agent written entirely in Rust. It is designed for performance, reliability, and minimal resource overhead.
@@ -39,6 +62,83 @@ The agent collects and reports the following system metrics:
 These metrics provide a lightweight but actionable overview of system health and runtime environment.
 
 Additional telemetry modules will be introduced in upcoming releases.
+
+---
+
+## Installation & Deployment
+
+The agent runs on every machine you want to monitor. Installation is handled by a single script — no manual user or service setup required.
+
+### Step 1 — Run the installer
+
+On the target Linux machine, run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Subhodip1307/ferroscope/main/scripts/install.sh | sudo bash
+```
+
+The script handles the full setup. It will:
+
+* Install and set up the agent on the system
+* Create a dedicated least-privilege user to run it
+* Generate the configuration file
+* **Enable** the systemd service — but **not start it yet** (you'll start it once it's configured)
+
+### Step 2 — Create a node in the web UI
+
+Log in to the Ferroscope web UI and click the **Create Node** button. Enter a name for the node and submit. The UI will return two values:
+
+* an **auth token**
+* a **server (backend) URL**
+
+Copy both — you'll need them in the next step.
+
+### Step 3 — Configure the agent
+
+On the machine where you installed the agent, open the config file at `/etc/ferroscope_agent/agent.toml`:
+
+```bash
+sudo nano /etc/ferroscope_agent/agent.toml     # or: sudo vim ...
+```
+
+Fill in the two values you copied from the web UI:
+
+```toml
+agent_auth_token = "<token from the web UI>"
+agent_server_url = "<server url from the web UI>"
+```
+
+Save and exit.
+
+### Step 4 — Start the agent
+
+The installer only *enabled* the service, so you need to start it after configuring:
+
+```bash
+sudo systemctl start ferr
+```
+
+Check that it's running:
+
+```bash
+systemctl status ferr
+journalctl -u ferr -f     # follow the logs
+```
+
+Now check the web UI — the node should start reporting its stats. If nothing shows up right away, click the refresh button in the UI (or reload the page). Because the service was enabled during install, it will also start automatically on every boot.
+
+### Tuning the agent (optional)
+
+`agent.toml` also contains a few timing options you can adjust. All values are in **seconds**.
+
+| Option | Default | What it does |
+| ----------------- | ----- | --------------------------------------------------------------------------- |
+| `api_time_out`    | `5`   | How long the agent waits for the server to respond before the request times out. |
+| `cpu_interval`    | `60`  | How often CPU usage is collected and sent — every 60s by default.           |
+| `ram_interval`    | `60`  | How often RAM usage is collected and sent — every 60s by default.           |
+| `uptime_interval` | `600` | How often system uptime is reported — every 10 minutes by default.          |
+
+> The file contains a couple of additional interval options as well; those will be covered in a later section.
 
 ---
 
@@ -183,149 +283,8 @@ This configuration model is intentionally simple and deterministic. More advance
 
 ---
 
-## Installation
-
-The agent must be installed directly on the target Linux machine.
-
-Installation options will include:
-
-### 1. Download or Build
-
-- **Option A: Download Compiled Binary (Linux x86_64)**
-  
-  [Download Latest Release](./WooDns-linux-amd64)
-
-  ```sh
-  chmod +x ferroscope-agent
-  ```
-
-- **Option B: Build from Source**
-
-    ferroscope requires **Rust 1.89.0 or later**.
-
-    ```sh
-    git clone https://github.com/Subhodip1307/ferroscope.git
-                or,
-    git clone git@github.com:Subhodip1307/ferroscope.git  
-    cd ferroscope/agent
-    cargo build --release
-    # The binary will be at target/release/agent
-    ```
-
----
-
-## Deployment with systemd
-
-For production environments, the Ferroscope Agent should be managed using `systemd` to ensure automatic startup, controlled restarts, and process supervision.
-
-### Step 1: Move Binary to a Standard Location
-
-Place the compiled binary in a stable path such as:
-
-```
-/usr/local/bin/ferroscope-agent
-```
-
-Ensure execution permissions are set:
-
-```
-chmod +x /usr/local/bin/ferroscope-agent
-```
-
-The `CONF/` directory must remain in the same directory as the binary unless future versions introduce configurable paths.
-
----
-
-### Step 2: Create systemd Service File
-
-Create a service file:
-
-```
-/etc/systemd/system/ferroscope-agent.service
-```
-
-Example configuration:
-
-```
-[Unit]
-Description=Ferroscope Monitoring Agent
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/local/bin/ferroscope-agent
-WorkingDirectory=/usr/local/bin
-User=woodns
-Group=woodns
-Restart=on-failure
-Environment="BASEAPI=<your server url>"
-Environment="AUTH=<your server AUTH TOKEN>"
-
-[Install]
-WantedBy=multi-user.target
-```
-
----
-
-### Environment Variables
-
-Ferroscope Agent requires the following environment variables:
-
-| Variable  | Description                               |
-| --------- | ----------------------------------------- |
-| `BASEAPI` | Base URL of the Ferroscope backend server |
-| `AUTH`    | Authentication token used by the agent    |
-
-
-### Step 3: Reload and Enable Service
-
-Reload systemd:
-
-```
-systemctl daemon-reload
-```
-
-Enable the service to start on boot:
-
-```
-systemctl enable ferroscope-agent
-```
-
-Start the service:
-
-```
-systemctl start ferroscope-agent
-```
-
----
-
-### Step 4: Verify Status
-
-Check service status:
-
-```
-systemctl status ferroscope-agent
-```
-
-View logs:
-
-```
-journalctl -u ferroscope-agent -f
-```
-
----
-
-### Production Recommendations
-
-* Avoid running as `root` unless required. Create a dedicated system user for the agent.
-* Restrict filesystem permissions on the `CONF/` directory.
-* Monitor restart frequency to detect crash loops.
-* Consider resource limits (`LimitNOFILE`, `MemoryMax`) for hardened environments.
-
-Using systemd ensures the Ferroscope Agent remains resilient, supervised, and automatically recovered in case of failure.
-
-
 ## Security Considerations
+
 * No unnecessary ports are exposed.
 * Communication with backend services should be secured using TLS.
 * Sensitive configuration values should be protected at the filesystem level.

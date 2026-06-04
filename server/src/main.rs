@@ -18,6 +18,8 @@ use tokio::sync::mpsc;
 
 #[tokio::main]
 async fn main() {
+    println!("Runing Version : {}",env!("CARGO_PKG_VERSION"));
+
     #[cfg(not(debug_assertions))]
     let allowed_origins: Vec<HeaderValue> = env::var("CORS")
         .unwrap_or_default()
@@ -28,8 +30,7 @@ async fn main() {
     #[cfg(debug_assertions)]
     let allowed_origins = [
         HeaderValue::from_static("http://localhost:3000"),
-        HeaderValue::from_static("http://127.0.0.1:3000"),
-        HeaderValue::from_static("http://192.168.0.161:3000"),
+        HeaderValue::from_static("http://127.0.0.1:3000")
     ];
 
     let cors = CorsLayer::new()

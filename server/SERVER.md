@@ -16,6 +16,14 @@ This guide walks through deploying the FerroScope **server** and **web UI** with
 
 ---
 
+The **FerroScope server** is the central monitoring hub of the system, written entirely in Rust. It's built to ingest high-frequency telemetry from many agents at once while staying fast and resource-efficient under load.
+
+Every agent reports into the server, which stores incoming metrics in PostgreSQL, tracks the health of your nodes and services, and streams live updates to the web dashboard over Server-Sent Events. It also evaluates alert conditions and sends notifications. For example when a node or service goes down, or when a TLS certificate is nearing expiry.
+
+The **web UI** is the frontend you log in to in order to view all of this and manage your nodes.
+
+> **Built in Rust:** like the agent, the server is designed for performance, reliability, and a low resource footprint — so a single instance can handle data from a large number of nodes.
+
 ## Overview
 
 FerroScope is published as two Docker images:
@@ -55,6 +63,10 @@ sudo mkdir -p /srv/ferroscope_server
 ## Deploying with Docker
 
 You can run the UI and the backend together in a single Compose file, or split them into separate files (useful when the UI runs on a different machine from the server).
+
+Both images are published on Docker Hub:
+- **Server:** [`subhodip1307/ferroscope-server`](https://hub.docker.com/r/subhodip1307/ferroscope-server)
+- **Web UI:** [`subhodip1307/ferroscope-ui`](https://hub.docker.com/r/subhodip1307/ferroscope-ui)
 
 ### Option A — Everything in one Compose file
 
