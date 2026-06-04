@@ -40,23 +40,6 @@ This means you find out about outages and expiring certificates *before* they tu
 
 ---
 
-## Project Status
-
-🚧 **Work in Progress**
-
-FerroScope is under active development and testing. Core features are implemented and continually being refined, and the architecture may evolve as the project matures.
-
-Planned improvements include:
-
-- Additional system metrics
-- More service monitoring capabilities
-- Improved distributed node communication
-- Expanded notification channels and rules
-- Performance optimizations
-- A richer web-based monitoring interface
-
----
-
 ## Features
 
 FerroScope is designed around simplicity and efficiency, delivering the essentials of monitoring while staying lightweight and easy to operate.
