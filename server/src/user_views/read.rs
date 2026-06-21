@@ -1,6 +1,6 @@
 use super::payloads;
 use super::response as get_payload;
-use crate::objects::AppState;
+use crate::state::AppState;
 use axum::{
     Json,
     extract::{Query, State},
@@ -9,6 +9,7 @@ use axum::{
 use chrono::{DateTime, Utc};
 use sqlx::Row;
 use std::collections::HashMap;
+
 
 pub(super) async fn __get_node_list(
     State(db_state): State<AppState>,
@@ -26,7 +27,7 @@ pub(super) async fn __get_nodeinfo(
     Query(params): Query<payloads::IdQuery>,
 ) -> Result<(StatusCode, Json<get_payload::SysInfo>), StatusCode> {
     let row = sqlx::query_as::<_,get_payload::SysInfo>(
-        "SELECT system_name,kernel_version,os_version,uptime,cpu_threads,cpu_vendor FROM sysinfo where node_id = $1",
+        "SELECT s.system_name, s.kernel_version, s.os_version, s.uptime, s.cpu_threads, s.cpu_vendor, n.name as node_name FROM sysinfo s JOIN nodes n ON s.node_id = n.id where node_id = $1",
     )
     .bind(params.node)
     .fetch_optional(&db_state.db)
@@ -211,3 +212,4 @@ pub(super) async fn __get_notification_type() -> Json<get_payload::__ArrayType<'
     let data = Vec::from(["webhook", "email"]);
     Json(get_payload::__ArrayType { data })
 }
+

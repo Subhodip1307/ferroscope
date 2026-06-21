@@ -1,5 +1,5 @@
-mod system;
 mod jobs;
+mod system;
 use reqwest::{Client, header};
 use std::sync::Arc;
 mod set_up;
@@ -12,10 +12,9 @@ struct Payload {
     body: serde_json::Value,
 }
 
-
 #[tokio::main]
 async fn main() {
-    println!("Runing Version : {}",env!("CARGO_PKG_VERSION"));
+    println!("Runing Version : {}", env!("CARGO_PKG_VERSION"));
     // set-up
     let conf = {
         let service_setup = set_up::ConfSetUp::new();
@@ -46,9 +45,4 @@ async fn main() {
 
     // spawn other task
     tasks::spawn_info_sender(conf, tx, api_client).await;
-
-   
-
-    
 }
-

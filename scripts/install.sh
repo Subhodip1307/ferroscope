@@ -7,7 +7,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-URL="https://github.com/Subhodip1307/ferroscope/releases/download/v0.2.0/x86_64-unknown-linux-musl.tar.gz"
+URL="https://github.com/Subhodip1307/ferroscope/releases/download/v2.2/x86_64-unknown-linux-musl.tar.gz"
 FILE="ferroscope.tar.gz"
 echo "Downloading..."
 cd /usr/local/bin
@@ -67,22 +67,30 @@ StartLimitIntervalSec=600
 StartLimitBurst=6
 
 [Service]
-Restart=on-failure
+Restart=always
 RestartSec=10s
 
 ExecStart=/usr/local/bin/ferroscope-agent
-WorkingDirectory=/usr/local/bin
+ExecReload=/bin/kill -HUP \$MAINPID
 
 ConfigurationDirectory=ferroscope_agent
 ProtectSystem=strict
 ReadWritePaths=/etc/ferroscope_agent
 NoNewPrivileges=true
 
+LogsDirectory=ferroscope
+StandardOutput=append:/var/log/ferroscope/agent.log
+StandardError=append:/var/log/ferroscope/error.log
+
 User=ferroscope
 Group=ferroscope
 [Install]
 WantedBy=multi-user.target
 EOF
+
+#setting permission
+chown root:ferroscope /usr/local/bin/ferroscope-agent
+chmod 0750 /usr/local/bin/ferroscope-agent
 
 # restart the systemd 
 echo "Reloading systemd..."

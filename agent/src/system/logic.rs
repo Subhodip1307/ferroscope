@@ -1,15 +1,15 @@
 use crate::system::structures::__SysInfo;
-use crate::system::structures::{/*__Cprocesses,*/ __Memory,__DiskData,__DiskIoStats};
+use crate::system::structures::{__DiskData, __DiskIoStats, /*__Cprocesses,*/ __Memory};
 use anyhow;
 use procfs::Current;
 use procfs::CurrentSI;
 use procfs::KernelStats;
 use procfs::Meminfo;
 use procfs::Uptime;
-use tokio::time::{sleep, Duration,Instant};
-use sysinfo::{System};
-use std::{fs};
 use std::collections::HashMap;
+use std::fs;
+use sysinfo::System;
+use tokio::time::{Duration, Instant, sleep};
 
 fn cpu_total_ticks(ct: &procfs::CpuTime) -> u128 {
     let mut total = ct.user as u128 + ct.nice as u128 + ct.system as u128 + ct.idle as u128;
@@ -85,8 +85,6 @@ pub fn get_uptime() -> anyhow::Result<u64> {
     Ok(uptime.uptime_duration().as_secs())
 }
 
-
-
 fn read_diskstats() -> Vec<__DiskData> {
     let content = fs::read_to_string("/proc/diskstats").expect("Cannot read /proc/diskstats");
 
@@ -100,12 +98,12 @@ fn read_diskstats() -> Vec<__DiskData> {
             let name = fields[2].to_string();
 
             // Filter: keep only whole disks (sda, nvme0n1, vda, hda, xvda)
-          let is_disk = name.starts_with("nvme") && name.contains("n") && !name.contains("p")
-    || (name.starts_with("sd")
-        || name.starts_with("vd")
-        || name.starts_with("hd")
-        || name.starts_with("xvd"))
-        && !name.chars().last().unwrap_or('x').is_ascii_digit();
+            let is_disk = name.starts_with("nvme") && name.contains("n") && !name.contains("p")
+                || (name.starts_with("sd")
+                    || name.starts_with("vd")
+                    || name.starts_with("hd")
+                    || name.starts_with("xvd"))
+                    && !name.chars().last().unwrap_or('x').is_ascii_digit();
 
             if !is_disk {
                 return None;
@@ -137,8 +135,7 @@ fn calculate_speed(
 
             // Linux sector = 512 bytes
             let sector_size = 512.0;
-            let read_mb = (after_disk.sectors_read - before_disk.sectors_read) as f64
-                * sector_size
+            let read_mb = (after_disk.sectors_read - before_disk.sectors_read) as f64 * sector_size
                 / 1_048_576.0
                 / elapsed_secs;
             let write_mb = (after_disk.sectors_written - before_disk.sectors_written) as f64
@@ -151,9 +148,9 @@ fn calculate_speed(
         .collect()
 }
 
-pub async fn get_disk_io()->Vec<__DiskIoStats>{
+pub async fn get_disk_io() -> Vec<__DiskIoStats> {
     // returns [(Disk_name,read_MB,write_MB)]
-     // Snapshot 1
+    // Snapshot 1
     let snapshot1 = read_diskstats();
     // let disk_count = snapshot1.len();
     let t0 = Instant::now();
@@ -162,10 +159,14 @@ pub async fn get_disk_io()->Vec<__DiskIoStats>{
 
     // Snapshot 2
     let snapshot2 = read_diskstats();
-    let data= calculate_speed(&snapshot1, &snapshot2, elapsed)
-    .iter().map(|row|__DiskIoStats{name:row.0.clone(),read:row.1,write:row.2}).collect()
-    ;
+    let data = calculate_speed(&snapshot1, &snapshot2, elapsed)
+        .iter()
+        .map(|row| __DiskIoStats {
+            name: row.0.clone(),
+            read: row.1,
+            write: row.2,
+        })
+        .collect();
     println!("sending disk data");
     data
-
 }

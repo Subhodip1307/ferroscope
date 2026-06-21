@@ -7,6 +7,8 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::sync::watch::Sender;
+#[cfg(not(debug_assertions))]
+use crate::env;
 
 #[derive(Clone)]
 pub enum StreamPayLoad{
@@ -25,8 +27,7 @@ pub struct AppState {
 }
 
 impl  AppState{
-    pub fn new(
-        pg_pool: sqlx::Pool<sqlx::Postgres>,
+    pub async fn new(
         notifier: mpsc::Sender<NotificationData>,
     ) -> Self {
         // cache for user auth
@@ -34,6 +35,15 @@ impl  AppState{
             .max_capacity(100)
             .time_to_live(Duration::from_secs(60 * 5))
             .build();
+        #[cfg(not(debug_assertions))]
+        let pg_pool = PgPool::connect(&env::var("PSQL_URL").unwrap_or_default())
+        .await
+        .unwrap();
+
+        #[cfg(debug_assertions)]
+        let pg_pool = PgPool::connect("postgres://myuser:mypassword@127.0.0.1:5432/mydatabase")
+            .await
+            .unwrap();
         Self {
             db: pg_pool,
             stream_data: Arc::new(DashMap::new()),

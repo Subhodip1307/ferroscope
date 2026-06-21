@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use super::objects as payload;
-use crate::objects::{AppState,StreamPayLoad};
+use crate::state::{AppState,StreamPayLoad};
 use crate::user_views::{LatestCpu, LatestRam,NodeDiskIoStats};
 use axum::http::StatusCode;
 use axum::{Extension, Json, extract::State};
@@ -200,9 +200,9 @@ pub async fn __disk_io(
     Extension(nodes_id): Extension<i64>, State(db_state): State<AppState>,
     data:Json<Vec<ferroscope_server::global::structure::DiskIoStats>>
 ){
-    println!("runing disk_io");
+    // println!("runing disk_io");
     let all_disk:Arc<Vec<NodeDiskIoStats>>=Arc::new(data.0.into_iter().map(|i|NodeDiskIoStats{read:i.read,write:i.write,timestamp:Utc::now()}).collect());
-    println!("data is {:?}",all_disk);
+    // println!("data is {:?}",all_disk);
     let node_key = format!("node_diskio_strem_{nodes_id}");
     db_state.stream_data.entry(node_key)
     .and_modify(|tx|{

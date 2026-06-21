@@ -1,8 +1,8 @@
 use super::payloads::{Login, UsernamePasswordReset};
-use super::response::{AuthToken, AuthUser, AuthuserIdPassword};
-use crate::objects::AppState;
-use axum::http::StatusCode;
-use axum::{Extension, Json, extract::State};
+use super::response::{AuthToken,AuthuserIdPassword};
+use super::types::AuthUser;
+use crate::state::AppState;
+use axum::{Extension, Json, extract::State,http::StatusCode};
 use ferroscope_server::global::utils_functions::{hash_password, verify_password};
 use sqlx::Row;
 use std::collections::HashMap;
