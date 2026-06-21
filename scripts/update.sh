@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # --- Config ---
-BINARY_URL="https://github.com/Subhodip1307/ferroscope/releases/download/v0.2.0/x86_64-unknown-linux-musl.tar.gz"
+BINARY_URL="https://github.com/Subhodip1307/ferroscope/releases/download/v2.2/x86_64-unknown-linux-musl.tar.gz"
 FILE="new_ferroscope.tar.gz"
 BINARY_NAME="ferroscope-agent"
 TARGET="/usr/local/bin/ferroscope-agent"

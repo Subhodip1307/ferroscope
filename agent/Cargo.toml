@@ -25,3 +25,4 @@ tokio-rustls ={ version= "0.26.4" , default-features = false, features = ["ring"
 x509-parser = "0.18.1"
 time = { version = "0.3", features = ["serde"] }
 rustls-native-certs = "0.7"
+arc-swap = "1.9.1"

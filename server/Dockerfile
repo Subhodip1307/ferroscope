@@ -3,7 +3,7 @@ WORKDIR /code/
 COPY . .
 RUN cargo build --release
 
-FROM alpine:3.23 AS runner
+FROM alpine:3.21 AS runner
 WORKDIR /code
 COPY --from=builder /code/target/release/ferroscope-server /code/ferroscope-server
 COPY --from=builder /code/target/release/fero /usr/local/bin/fero

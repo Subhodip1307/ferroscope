@@ -21,7 +21,7 @@ FerroScope is built with a focus on:
 
 ---
 > 📦 **Want to deploy FerroScope?**
-> - Server & Web UI → **[Deployment Guide](server/SERVER.md)**
+> - Server & Web UI → **[Server Deployment Guide](server/SERVER.md)**
 > - Monitoring Agent → **[Agent Deployment Guide](agent/AGENT.MD)**
 
 ## Notifications
@@ -122,29 +122,23 @@ The result is a monitoring system you can stand up quickly and run without babys
 
 ## Creator
 
-<a href="https://github.com/Subhodip1307">
-  <img src="https://github.com/Subhodip1307.png" width="80px" style="border-radius:50%" alt="Subhodip1307"/>
-</a>
-
----
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/Subhodip1307">
+        <img src="https://github.com/Subhodip1307.png?size=120" width="120" alt="Subhodip1307"/>
+        <br/>
+        <sub><b>Subhodip1307</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ## Contributors
 
-<table>
-<tr>
-<td align="center">
-<a href="https://github.com/ssdev38">
-<img src="https://github.com/ssdev38.png" width="80px" style="border-radius:50%" alt="ssdev38"/>
+<a href="https://github.com/Subhodip1307/FerroScope/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Subhodip1307/FerroScope" />
 </a>
-</td>
-</tr>
-<tr>
-<td align="center">Web UI Development</td>
-</tr>
-</table>
-
----
-
 
 ## License
 

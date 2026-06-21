@@ -1,5 +1,4 @@
-use super::response::AuthUser;
-use crate::objects::AppState;
+use crate::state::AppState;
 use axum::{
     extract::State,
     http::{Request, StatusCode},
@@ -7,8 +6,9 @@ use axum::{
     response::Response,
 };
 use sqlx::Row;
+// auth
 
-pub(super) async fn user_auth(
+pub async fn agent_auth_middleware(
     State(db_state): State<AppState>,
     mut req: Request<axum::body::Body>,
     next: Next,
@@ -18,20 +18,28 @@ pub(super) async fn user_auth(
             Ok(v) => v,
             Err(_) => return Err(StatusCode::UNAUTHORIZED),
         };
+
         let cache_key = format!("user_auth_{auth_str}");
         let out_put: (bool, i64) = match db_state.cache.get(&cache_key) {
             Some(value) => (true, value),
             None => {
-                let fetch_data = sqlx::query("SELECT user_id FROM auth_tokens where token=$1")
+                #[cfg(feature = "disable_auth")]
+                let fetch_data = sqlx::query("SELECT id FROM nodes limit 1")
+                    .fetch_optional(&db_state.db)
+                    .await
+                    .unwrap();
+                #[cfg(not(feature = "disable_auth"))]
+                let fetch_data = sqlx::query("SELECT id FROM nodes where token=$1")
                     .persistent(true)
                     .bind(auth_str)
                     .fetch_optional(&db_state.db)
                     .await
                     .unwrap();
+
                 let out_put: (bool, i64) = match fetch_data {
                     Some(value) => {
-                        let user_pk = value.get("user_id");
-                        // setting the cache
+                        let user_pk = value.get("id");
+                        // setting cache
                         db_state.cache.insert(cache_key, user_pk);
                         (true, user_pk)
                     }
@@ -40,11 +48,10 @@ pub(super) async fn user_auth(
                 out_put
             }
         };
-
         if !out_put.0 {
             return Err(StatusCode::UNAUTHORIZED);
         }
-        req.extensions_mut().insert(AuthUser { user_id: out_put.1 });
+        req.extensions_mut().insert(out_put.1);
         let response = next.run(req).await;
         return Ok(response);
     }

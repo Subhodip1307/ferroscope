@@ -89,7 +89,7 @@ pub struct BaseConFig {
     web_interval: u64,
     host_interval: u64,
     uptime_interval: u64,
-    disk_io:Option<u64>
+    disk_io: Option<u64>,
 }
 
 impl BaseConFig {
@@ -127,8 +127,8 @@ impl BaseConFig {
         self.uptime_interval
     }
 
-    pub fn get_disk_io_interval(&self)->u64{
-        if let Some(disk_io_time)=self.disk_io{
+    pub fn get_disk_io_interval(&self) -> u64 {
+        if let Some(disk_io_time) = self.disk_io {
             return disk_io_time;
         }
         60

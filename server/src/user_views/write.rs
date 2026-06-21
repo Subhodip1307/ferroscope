@@ -1,8 +1,9 @@
 use super::payloads;
 use super::response as get_payload;
-use crate::objects::AppState;
+use crate::state::AppState;
 use axum::{Extension, Json, extract::State, http::StatusCode};
 use uuid::Uuid;
+use super::types::AuthUser;
 
 pub(super) async fn __create_node(
     State(db_state): State<AppState>,
@@ -38,7 +39,7 @@ pub(super) async fn __remove_node(
 
 pub(super) async fn __create_notification_rules(
     State(db_state): State<AppState>,
-    Extension(auth_user): Extension<get_payload::AuthUser>,
+    Extension(auth_user): Extension<AuthUser>,
     Json(data): Json<payloads::RulesData>,
 ) -> StatusCode {
     // will add payload checking code in future

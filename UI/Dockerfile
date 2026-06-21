@@ -1,4 +1,4 @@
-FROM node:20.19.2-alpine3.22 AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /code
 
@@ -7,7 +7,7 @@ RUN npm ci
 COPY . /code/
 RUN npm run build && rm -rf .next/cache
 
-FROM node:20.19.2-alpine3.22 AS worker
+FROM node:26-alpine AS worker
 
 WORKDIR /code
 ENV NODE_ENV=production

@@ -26,9 +26,9 @@ pub(super) async fn file_name_list(dir: &str) -> Result<Vec<String>, std::io::Er
     Ok(files)
 }
 
-pub async fn load_config(file: String) -> Result<Config, config::ConfigError> {
+pub async fn load_config(file: &str) -> Result<Config, config::ConfigError> {
     Config::builder()
-        .add_source(config::File::with_name(&file))
+        .add_source(config::File::with_name(file))
         .build()
     // let conf: Result<Host, config::ConfigError>=conf.try_deserialize();
     // conf

@@ -12,14 +12,15 @@
    - [Step 3 — Configure the agent](#step-3--configure-the-agent)
    - [Step 4 — Start the agent](#step-4--start-the-agent)
    - [Tuning the agent](#tuning-the-agent-optional)
-5. [Task Execution System](#task-execution-system)
-6. [Configuration](#configuration)
+5. [Updating the Agent](#updating-the-agent)
+6. [Task Execution System](#task-execution-system)
+7. [Configuration](#configuration)
    - [Directory Structure](#directory-structure)
    - [Web Checking Configuration](#web-checking-configuration)
    - [Host Checking Configuration](#host-checking-configuration)
    - [Important Notes](#important-notes)
-7. [Security Considerations](#security-considerations)
-8. [Roadmap](#roadmap)
+8. [Security Considerations](#security-considerations)
+9. [Roadmap](#roadmap)
 
 ---
 
@@ -137,8 +138,20 @@ Now check the web UI — the node should start reporting its stats. If nothing s
 | `cpu_interval`    | `60`  | How often CPU usage is collected and sent — every 60s by default.           |
 | `ram_interval`    | `60`  | How often RAM usage is collected and sent — every 60s by default.           |
 | `uptime_interval` | `600` | How often system uptime is reported — every 10 minutes by default.          |
+| `web_interval`    | `60`  | How often the agent runs the web service checks you've configured in `CONF/Web/` — every 60s by default. |
+| `host_interval`   | `50`  | How often the agent runs the host checks you've configured in `CONF/Host/` — every 50s by default. |
 
-> The file contains a couple of additional interval options as well; those will be covered in a later section.
+---
+
+## Updating the Agent
+
+To update an installed agent to the latest release, run the one-line updater on the target machine:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Subhodip1307/ferroscope/main/scripts/update.sh | sudo bash
+```
+
+This downloads the latest binary, stops the agent, swaps in the new build, and starts it again. Your existing configuration in `/etc/ferroscope_agent/agent.toml` is left untouched.
 
 ---
 
@@ -271,6 +284,27 @@ The agent will:
 * Report the result to the backend
 
 ---
+## Reloading Configuration
+ 
+The agent supports **runtime configuration reloading** — configuration files can be added, modified, or removed without restarting the agent or interrupting checks that are already in progress.
+ 
+**Configuration changes do not take effect automatically.** After adding, modifying, or removing any file under `CONF/`, a reload must be triggered for the changes to apply.
+ 
+After writing a configuration, run:
+ 
+```bash
+sudo systemctl reload ferr.service
+```
+ 
+The agent then re-scans the `CONF/Web/` and `CONF/Host/` directories and updates its active configuration set.
+ 
+### Reload Behavior
+ 
+* The reload replaces the in-memory configuration set atomically — running checks are not interrupted.
+* New configuration files are picked up, and removed files are dropped from the active set.
+* Multiple reloads triggered in quick succession may be merged into a single reload. This is expected behavior; the final on-disk state is what takes effect.
+* A restart of the agent is **not** required for configuration changes.
+---
 
 ### Important Notes
 
@@ -290,18 +324,3 @@ This configuration model is intentionally simple and deterministic. More advance
 * Sensitive configuration values should be protected at the filesystem level.
 
 ---
-
-## Roadmap
-
-Planned enhancements include:
-
-* Expanded telemetry metrics
-* Advanced health validation
-* Alerting integrations
-* Multi-platform support
-* Plugin-based task system
-* Performance optimizations for large-scale deployments
-
----
-
-Ferroscope Agent is designed to be a foundational infrastructure component — lightweight, deterministic, and production-ready.

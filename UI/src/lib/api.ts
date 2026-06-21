@@ -17,7 +17,12 @@ import type {
 } from "@/types";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const getBaseUrl = () => process.env.NEXT_PUBLIC_BASE_URL || "";
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined' && (window as any).__ENV__?.BASE_URL) {
+    return (window as any).__ENV__.BASE_URL;
+  }
+  return process.env.NEXT_PUBLIC_BASE_URL || '';
+};
 
 const getApiUrl = () => `${getBaseUrl()}/view`;
 const getAuthUrl = () => `${getBaseUrl()}/auth`;
