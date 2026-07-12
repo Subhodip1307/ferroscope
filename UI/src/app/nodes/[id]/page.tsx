@@ -6,7 +6,7 @@ import { CPUChart } from "@/components/dashboard/CPUChart";
 import { RAMChart } from "@/components/dashboard/RAMChart";
 import { ServiceStatusTabs } from "@/components/dashboard/ServiceStatusTabs";
 import { api } from "@/lib/api";
-import type { Node, ServiceStatusGrouped, NodeInfo } from "@/types";
+import type { ServiceStatusGrouped, NodeInfo } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/dashboard/Header";
 import { Button } from "@/components/ui/button";
@@ -19,43 +19,29 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  CheckCircle2,
-  XCircle,
   Cpu,
   HardDrive,
   Info,
   Activity,
   ArrowLeft,
 } from "lucide-react";
+import { DiskChart } from "@/components/dashboard/DiskChart";
 
 export default function NodeDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const nodeId = Number(params.id);
-
-  const [node, setNode] = useState<Node | null>(null);
   const [nodeInfo, setNodeInfo] = useState<NodeInfo | null>(null);
   const [services, setServices] = useState<ServiceStatusGrouped>({});
   const [loadingServices, setLoadingServices] = useState(false);
   const [loadingInfo, setLoadingInfo] = useState(false);
 
+
   useEffect(() => {
-    fetchNode();
+    fetchNodeInfo();
+    fetchServices();
   }, [nodeId]);
 
-  const fetchNode = async () => {
-    try {
-      const nodes = await api.getNodes();
-      const selected = nodes.find((n: Node) => n.id === nodeId);
-      setNode(selected || null);
-      if (selected) {
-        fetchNodeInfo();
-        fetchServices();
-      }
-    } catch (error) {
-      console.error("Error fetching node:", error);
-    }
-  };
 
   const fetchNodeInfo = async () => {
     try {
@@ -82,7 +68,17 @@ export default function NodeDetailsPage() {
     }
   };
 
-  if (!node) {
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      fetchNodeInfo(),
+      fetchServices(),
+    ]);
+
+    toast.success("Node data refreshed");
+  };
+
+  if (loadingInfo && !nodeInfo) {
     return (
       <div className="p-10 text-center text-muted-foreground">
         Loading node...
@@ -93,10 +89,7 @@ export default function NodeDetailsPage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-muted/20">
       <Header
-        onRefresh={() => {
-          fetchNode();
-          toast.success("Node data refreshed");
-        }}
+        onRefresh={handleRefresh}
         isLoading={loadingInfo || loadingServices}
       />
 
@@ -112,12 +105,17 @@ export default function NodeDetailsPage() {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight">{node.name}</h1>
+
+            <h1 className="text-3xl font-bold tracking-tight">
+              {nodeInfo?.node_name ?? `Node ${nodeId}`}
+            </h1>
           </div>
+
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-sm px-3 py-1">
-              Node ID: {node.id}
+              Node ID: {nodeId}
             </Badge>
+
             {nodeInfo && (
               <Badge variant="secondary" className="text-sm px-3 py-1">
                 {nodeInfo.os_version}
@@ -126,13 +124,27 @@ export default function NodeDetailsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <CPUChart nodeId={node.id} nodeName={node.name} />
-              <RAMChart nodeId={node.id} nodeName={node.name} />
-            </div>
+        {/* Charts */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <CPUChart
+            nodeId={nodeId}
+            nodeName={nodeInfo?.node_name ?? ""}
+          />
 
+          <RAMChart
+            nodeId={nodeId}
+            nodeName={nodeInfo?.node_name ?? ""}
+          />
+
+          <DiskChart
+            nodeId={nodeId}
+            nodeName={nodeInfo?.node_name ?? ""}
+          />
+        </div>
+
+        {/* Service Status + System Information */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -140,6 +152,7 @@ export default function NodeDetailsPage() {
                   Services Status
                 </CardTitle>
               </CardHeader>
+
               <CardContent>
                 {loadingServices ? (
                   <div className="text-center py-4 text-muted-foreground italic">
@@ -152,17 +165,19 @@ export default function NodeDetailsPage() {
             </Card>
           </div>
 
-          <div className="space-y-6">
+          <div>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Info className="w-5 h-5" />
                   System Information
                 </CardTitle>
+
                 <CardDescription>
                   Detailed hardware and OS specifications
                 </CardDescription>
               </CardHeader>
+
               <CardContent className="space-y-4">
                 {loadingInfo ? (
                   <div className="text-center py-8 text-muted-foreground italic">
@@ -179,10 +194,12 @@ export default function NodeDetailsPage() {
                           {nodeInfo.system_name}
                         </p>
                       </div>
+
                       <div className="p-3 rounded-lg border bg-accent/30 space-y-1">
                         <span className="text-xs text-muted-foreground uppercase font-semibold">
                           Uptime
                         </span>
+
                         <p className="font-medium">
                           {Math.floor(nodeInfo.uptime / 3600)}h{" "}
                           {Math.floor((nodeInfo.uptime % 3600) / 60)}m
@@ -193,13 +210,16 @@ export default function NodeDetailsPage() {
                     <div className="space-y-3">
                       <div className="flex items-start gap-3 p-3 rounded-lg border">
                         <Cpu className="w-5 h-5 mt-0.5 text-blue-500" />
+
                         <div className="space-y-1">
                           <span className="text-sm font-semibold">
                             CPU Details
                           </span>
+
                           <p className="text-sm text-muted-foreground">
                             {nodeInfo.cpu_vendor}
                           </p>
+
                           <Badge variant="secondary" className="text-xs">
                             {nodeInfo.cpu_threads} Threads
                           </Badge>
@@ -208,10 +228,12 @@ export default function NodeDetailsPage() {
 
                       <div className="flex items-start gap-3 p-3 rounded-lg border">
                         <HardDrive className="w-5 h-5 mt-0.5 text-purple-500" />
+
                         <div className="space-y-1">
                           <span className="text-sm font-semibold">
                             Kernel Version
                           </span>
+
                           <p className="text-sm text-muted-foreground font-mono truncate">
                             {nodeInfo.kernel_version}
                           </p>
@@ -220,10 +242,12 @@ export default function NodeDetailsPage() {
 
                       <div className="flex items-start gap-3 p-3 rounded-lg border">
                         <Info className="w-5 h-5 mt-0.5 text-emerald-500" />
+
                         <div className="space-y-1">
                           <span className="text-sm font-semibold">
                             OS Version
                           </span>
+
                           <p className="text-sm text-muted-foreground">
                             {nodeInfo.os_version}
                           </p>

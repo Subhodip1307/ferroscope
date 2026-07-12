@@ -174,7 +174,7 @@ export function CreateRuleModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/70 z-[100] backdrop-blur-sm"
+            className="fixed inset-0 bg-black/70 z-[100]"
           />
           <div className="fixed inset-0 flex items-center justify-center z-[101] p-4 pointer-events-none overflow-y-auto">
             <motion.div

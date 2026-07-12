@@ -29,17 +29,19 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
   const [user, setUser] = useState<UserDetails | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
+  const handleProfileClick = async () => {
+    const opening = !isProfileOpen;
+    setIsProfileOpen(opening);
+
+    if (opening && !user) {
       try {
         const details = await api.getUserDetails();
         setUser(details);
       } catch (error) {
         console.error("Failed to fetch user details:", error);
       }
-    };
-    fetchUser();
-  }, []);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -97,7 +99,7 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  onClick={handleProfileClick}
                   className="flex items-center gap-2 px-2 hover:bg-accent rounded-full transition-colors h-9"
                 >
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">

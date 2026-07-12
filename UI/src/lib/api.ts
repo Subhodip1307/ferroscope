@@ -13,15 +13,11 @@ import type {
   UserDetails,
   ChangePasswordCredentials,
   Rule,
+  DiskData,
 } from "@/types";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const getBaseUrl = () => {
-  if (typeof window !== 'undefined' && (window as any).__ENV__?.BASE_URL) {
-    return (window as any).__ENV__.BASE_URL;
-  }
-  return process.env.NEXT_PUBLIC_BASE_URL || '';
-};
+const getBaseUrl = () => process.env.NEXT_PUBLIC_BASE_URL || "";
 
 const getApiUrl = () => `${getBaseUrl()}/view`;
 const getAuthUrl = () => `${getBaseUrl()}/auth`;
@@ -125,6 +121,15 @@ export const api = {
     }));
   },
 
+  async getDiskHistory(nodeId: number): Promise<DiskData[]> {
+    const response = await fetch(`${getApiUrl()}/disk_stat?node=${nodeId}`, {
+      method: "POST",
+      headers: getHeaders(),
+    });
+
+    return (await handleResponse<DiskData[]>(response, [])) ?? [];
+  },
+
   async getNodeServices(nodeId: number): Promise<Service[]> {
     const response = await fetch(`${getApiUrl()}/node_services?node=${nodeId}`, {
       method: "POST",
@@ -217,6 +222,11 @@ export const api = {
   getRAMStreamUrl(nodeId: number): string {
     const streamBase = getApiUrl()?.replace("/view", "/stream") || "";
     return `${streamBase}/ram?node=${nodeId}`;
+  },
+
+  getDiskStreamUrl(nodeId: number): string {
+    const streamBase = getApiUrl()?.replace("/view", "/stream") || "";
+    return `${streamBase}/disk?node=${nodeId}`;
   },
 
   async createNode(name: string): Promise<{ token: string } | null> {

@@ -35,6 +35,7 @@ export interface NodeInfo {
   uptime: number;
   cpu_threads: number;
   cpu_vendor: string;
+    node_name: string;
 }
 
 export interface LoginCredentials {
@@ -65,6 +66,12 @@ export interface CPUStatRaw {
 export interface RAMStatRaw {
   free: string;
   total: string;
+  timestamp: string;
+}
+
+export interface DiskData {
+  read: number;
+  write: number;
   timestamp: string;
 }
 
