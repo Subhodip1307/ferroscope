@@ -23,7 +23,7 @@ export interface ServiceStatus {
   status: "up" | "down";
   category: string;
   error_msg?: string;
-  ssl_exp?: string | null;
+  ssl_exp?: number[] | null;
 }
 
 export type ServiceStatusGrouped = Record<string, ServiceStatus[]>;
@@ -35,7 +35,7 @@ export interface NodeInfo {
   uptime: number;
   cpu_threads: number;
   cpu_vendor: string;
-    node_name: string;
+  node_name: string;
 }
 
 export interface LoginCredentials {
