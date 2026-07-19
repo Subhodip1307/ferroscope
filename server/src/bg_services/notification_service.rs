@@ -8,6 +8,8 @@ use ferroscope_server::global::structure::{
 use sqlx::Row;
 use std::sync::Arc;
 use tokio::sync::mpsc;
+use mini_moka::sync::Cache;
+use std::time::Duration;
 
 pub async fn notification_service(
     pg_pool: sqlx::Pool<sqlx::Postgres>,
@@ -28,12 +30,22 @@ async fn notifier_worker(
     mut receiver: mpsc::Receiver<NotificationData>,
 ) {
     tokio::spawn(async move {
+        // wait at least 1 min before
+        let notificaltion_flag: Cache<String, bool> = Cache::builder()
+            .max_capacity(100)
+            .time_to_live(Duration::from_secs(60 * 1))
+            .build();
+
         while let Some(msg) = receiver.recv().await {
+             let flag_key=format!("event_name_{}_unique_id_{}",msg.get_event_type(),msg.unique_id);
+            if  notificaltion_flag.contains_key(&flag_key){
+                continue;
+            };
             let data:Vec<BGRulesData>=
                 sqlx::query_as("select name,condition_json,action_json from rules where  is_active=TRUE AND event_type=$1 ")
                 .bind(msg.get_event_type())
                 .fetch_all(&pg_pool).await.unwrap();
-
+            notificaltion_flag.insert(flag_key,true);
             match msg.category {
                 EventType::NODE | EventType::SERVICE => {
                     service_node_notifier(msg, &pg_pool, &mail_sender, &webhook_sender, data).await

@@ -1,4 +1,6 @@
-use crate::user_views::{LatestCpu, LatestRam,NodeDiskIoStats};
+#[cfg(not(debug_assertions))]
+use crate::env;
+use crate::user_views::{LatestCpu, LatestRam, NodeDiskIoStats};
 use dashmap::DashMap;
 use ferroscope_server::global::structure::NotificationData;
 use mini_moka::sync::Cache;
@@ -7,14 +9,12 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::sync::watch::Sender;
-#[cfg(not(debug_assertions))]
-use crate::env;
 
 #[derive(Clone)]
-pub enum StreamPayLoad{
+pub enum StreamPayLoad {
     Cpu(LatestCpu),
     Ram(LatestRam),
-    Disk(Arc<Vec<NodeDiskIoStats>>)
+    Disk(Arc<Vec<NodeDiskIoStats>>),
 }
 
 #[derive(Clone)]
@@ -26,10 +26,8 @@ pub struct AppState {
     pub notifier: mpsc::Sender<NotificationData>,
 }
 
-impl  AppState{
-    pub async fn new(
-        notifier: mpsc::Sender<NotificationData>,
-    ) -> Self {
+impl AppState {
+    pub async fn new(notifier: mpsc::Sender<NotificationData>) -> Self {
         // cache for user auth
         let cache: Cache<String, i64> = Cache::builder()
             .max_capacity(100)
@@ -37,8 +35,8 @@ impl  AppState{
             .build();
         #[cfg(not(debug_assertions))]
         let pg_pool = PgPool::connect(&env::var("PSQL_URL").unwrap_or_default())
-        .await
-        .unwrap();
+            .await
+            .unwrap();
 
         #[cfg(debug_assertions)]
         let pg_pool = PgPool::connect("postgres://myuser:mypassword@127.0.0.1:5432/mydatabase")

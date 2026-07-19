@@ -9,9 +9,10 @@ import {
   User,
   ChevronDown,
   Key,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { api } from "@/lib/api";
@@ -19,11 +20,12 @@ import type { UserDetails } from "@/types";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 
 interface HeaderProps {
-  onRefresh: () => void;
-  isLoading: boolean;
+  onRefresh?: () => void;
+  isLoading?: boolean;
 }
 
-export function Header({ onRefresh, isLoading }: HeaderProps) {
+export function Header({ onRefresh, isLoading = false }: HeaderProps) {
+  const pathname = usePathname();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState<UserDetails | null>(null);
@@ -61,6 +63,8 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
     window.location.href = "/login";
   };
 
+  const isUsersPage = pathname === "/users";
+
   return (
     <>
       <motion.header
@@ -81,19 +85,38 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
             </Link>
 
             <div className="flex items-center gap-3">
+              {/* Users Page Button */}
+              <Link href="/users">
+                <Button
+                  variant={isUsersPage ? "default" : "outline"}
+                  size="sm"
+                  className={`gap-2 ${
+                    isUsersPage
+                      ? "bg-gradient-to-r from-primary to-blue-600 text-white font-medium shadow-md shadow-primary/20"
+                      : "hover:border-primary/50 hover:bg-primary/5"
+                  }`}
+                >
+                  <Users className="h-4 w-4" />
+                  <span>Users</span>
+                </Button>
+              </Link>
+
               <ThemeToggle />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onRefresh}
-                disabled={isLoading}
-                className="gap-2 hidden md:flex"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </Button>
+
+              {onRefresh && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRefresh}
+                  disabled={isLoading}
+                  className="gap-2 hidden md:flex"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                  />
+                  Refresh
+                </Button>
+              )}
 
               <div className="relative" ref={dropdownRef}>
                 <Button
@@ -129,6 +152,15 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
                       </div>
 
                       <div className="space-y-1">
+                        <Link
+                          href="/users"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-accent transition-colors w-full text-left"
+                        >
+                          <Users className="h-4 w-4 text-primary" />
+                          Manage Users
+                        </Link>
+
                         <button
                           onClick={() => {
                             setIsProfileOpen(false);
@@ -158,6 +190,7 @@ export function Header({ onRefresh, isLoading }: HeaderProps) {
             </div>
           </div>
         </div>
+
       </motion.header>
 
       <ChangePasswordModal

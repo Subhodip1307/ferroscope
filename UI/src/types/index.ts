@@ -15,7 +15,18 @@ export interface RAMData {
 }
 
 export interface Service {
+  id: number;
   service_name: string;
+}
+
+export interface NodeWithServices {
+  node_id: number;
+  node_name: string;
+  services: Service[];
+}
+
+export interface NodesWithServicesPayload {
+  obj_id: number[];
 }
 
 export interface ServiceStatus {
@@ -23,7 +34,7 @@ export interface ServiceStatus {
   status: "up" | "down";
   category: string;
   error_msg?: string;
-  ssl_exp?: string | null;
+  ssl_exp?: number[] | null;
 }
 
 export type ServiceStatusGrouped = Record<string, ServiceStatus[]>;
@@ -35,7 +46,7 @@ export interface NodeInfo {
   uptime: number;
   cpu_threads: number;
   cpu_vendor: string;
-    node_name: string;
+  node_name: string;
 }
 
 export interface LoginCredentials {
@@ -99,4 +110,57 @@ export interface Rule {
   event_type: EventType;
   condition: Condition;
   action: RuleAction;
+}
+
+// ─── User Access Control Types ───────────────────────────────────────────────
+export interface UserAccessControlItem {
+  id: number;
+  username: string;
+  is_admin: boolean;
+  email: string | null;
+  joined_date: string;
+  permissions?: UserPermissionsResponse;
+}
+
+export interface CreateUserPayload {
+  username: string;
+  email: string | null;
+  password: string;
+  is_admin: boolean;
+}
+
+export interface EditUserPayload {
+  id: number;
+  username: string;
+  is_admin: boolean;
+  email?: string | null;
+  password?: string | null;
+}
+
+// ─── Permission ───────────────────────────────────────────────────────────────
+
+export type MetricType = "RAM" | "CPU" | "DISK";
+
+export interface UserPermission {
+  node_id: number;
+  metrix: MetricType[] | null;
+  services: number[] | null;
+  full_permission: boolean | null;
+}
+
+export interface AssignPermissionPayload {
+  user_id: number;
+  nodes_permissions: UserPermission[];
+}
+
+export interface NodePermissionView {
+  node_id: number;
+  is_full_access: boolean;
+  metrix: MetricType[];
+  services: number[];
+}
+
+export interface UserPermissionsResponse {
+  user_id: number;
+  nodes_permissions: NodePermissionView[];
 }

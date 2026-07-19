@@ -8,13 +8,12 @@ mod process;
 use tokio::sync::mpsc;
 mod app;
 mod middleware;
-
 #[tokio::main]
 async fn main() {
-    println!("Runing Version : {}",env!("CARGO_PKG_VERSION"));
+    println!("Runing Version : {}", env!("CARGO_PKG_VERSION"));
     let (tx, rx) = mpsc::channel::<ferroscope_server::global::structure::NotificationData>(20);
-    let app_state = AppState::new( tx).await;
-    let pg_pool=app_state.db.clone();
+    let app_state = AppState::new(tx).await;
+    let pg_pool = app_state.db.clone();
 
     sqlx::migrate!("./migrations").run(&pg_pool).await.unwrap();
     let app = app::create_axum_app(app_state.clone());

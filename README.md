@@ -23,6 +23,7 @@ FerroScope is built with a focus on:
 > 📦 **Want to deploy FerroScope?**
 > - Server & Web UI → **[Server Deployment Guide](server/SERVER.md)**
 > - Monitoring Agent → **[Agent Deployment Guide](agent/AGENT.MD)**
+> - Updating an existing install → **[Update Guide](UPDATE.md)**
 
 ## Notifications
 
