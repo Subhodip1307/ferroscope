@@ -1,7 +1,7 @@
 // shared types
-use serde::{Serialize};
+use serde::{Serialize,Deserialize};
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize,Deserialize)]
 pub struct AuthUser {
     pub user_id: i64,
 }

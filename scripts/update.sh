@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # --- Config ---
-BINARY_URL="https://github.com/Subhodip1307/ferroscope/releases/download/v2.2/x86_64-unknown-linux-musl.tar.gz"
-FILE="new_ferroscope.tar.gz"
+VERSION="v2.2"
+BINARY_URL="https://github.com/Subhodip1307/ferroscope/releases/download/${VERSION}/x86_64-unknown-linux-musl.tar.gz"
 BINARY_NAME="ferroscope-agent"
 TARGET="/usr/local/bin/ferroscope-agent"
 SERVICE="ferr"
@@ -14,34 +14,31 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-echo ">> Downloading new binary..."
-curl -fL "$BINARY_URL" -o "$FILE"
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+
+echo ">> Downloading ${VERSION}..."
+curl -fL --proto '=https' "$BINARY_URL" -o "$TMP/ferroscope.tar.gz"
+
+# TODO: verify checksum before installing, e.g.
+#   echo "<expected-sha256>  $TMP/ferroscope.tar.gz" | sha256sum -c -
 
 echo ">> Extracting..."
-tar -xzf "$FILE"
+tar -xzf "$TMP/ferroscope.tar.gz" -C "$TMP"
 
-# Make sure the expected binary is actually here before we touch the service
-if [ ! -f "$BINARY_NAME" ]; then
-  echo "Error: '$BINARY_NAME' not found after extraction." >&2
-  rm -f "$FILE"
+if [ ! -f "$TMP/$BINARY_NAME" ]; then
+  echo "Error: '$BINARY_NAME' not found in the archive." >&2
   exit 1
 fi
 
-echo ">> Stopping ${SERVICE}..."
-systemctl stop "$SERVICE"
+echo ">> Installing new binary at ${TARGET}..."
+install -o root -g ferroscope -m 0750 "$TMP/$BINARY_NAME" "$TARGET"
 
-echo ">> Replacing binary at ${TARGET}..."
-rm -f "$TARGET"
-mv "$BINARY_NAME" "$TARGET"
-chmod +x "$TARGET"
-chown root:ferroscope "$TARGET"
-chmod 0750 "$TARGET"
+echo ">> Restarting ${SERVICE}..."
+if systemctl cat "$SERVICE" > /dev/null 2>&1; then
+  systemctl restart "$SERVICE"
+else
+  echo "Warning: service '$SERVICE' not found — binary updated, nothing restarted." >&2
+fi
 
-
-echo ">> Starting ${SERVICE}..."
-systemctl start "$SERVICE"
-
-echo ">> Cleaning up..."
-rm -f "$FILE"
-
-echo ">> Done. ferroscope-agent updated successfully."
+echo ">> Done. ferroscope-agent updated to ${VERSION}."

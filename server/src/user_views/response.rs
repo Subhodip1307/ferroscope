@@ -84,7 +84,8 @@ pub struct NodeDiskIoStats{
 
 #[derive(Debug, Serialize, sqlx::FromRow)]
 pub struct UserList{
+    id:i64,
     username:String,
-    email:String,
+    email:Option<String>,
     joined_date:DateTime<Utc>
 }

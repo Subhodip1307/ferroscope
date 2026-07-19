@@ -6,37 +6,57 @@ async fn get_pool() -> Pool<Postgres> {
     #[cfg(not(debug_assertions))]
     let pg_pool = PgPool::connect(&env::var("PSQL_URL").unwrap_or_default())
         .await
-        .unwrap();
+        .expect("Failed to connect to database. Is PSQL_URL set correctly?");
 
     #[cfg(debug_assertions)]
     let pg_pool = PgPool::connect("postgres://myuser:mypassword@127.0.0.1:5432/mydatabase")
         .await
-        .unwrap();
+        .expect("Failed to connect to local database. Is Postgres running on 127.0.0.1:5432?");
     pg_pool
+}
+
+fn print_usage(program: &str) {
+    println!("Usage:");
+    println!("  {program} createuser <username> <password>       Create a new user");
+    println!("  {program} changepassword <username> <password>   Change an existing user's password");
 }
 
 #[tokio::main]
 async fn main() {
     let args: Vec<String> = env::args().collect();
+
     if args.len() <= 1 {
-        println!("Please Give Correct Arguments");
+        println!("Error: no command given.\n");
+        print_usage(&args[0]);
         return;
     }
 
-    if args[1] == "changepassword" && args.len() >= 4 {
-        change_password(&args[2], &args[3]).await;
-    } else if args[1] == "createuser" && args.len() >= 4 {
-        create_user(&args[2], &args[3]).await;
-    } else {
-        println!("wrong input \n options are:\nchangepassword\ncreateuser ")
+    match args[1].as_str() {
+        "changepassword" => {
+            if args.len() < 4 {
+                println!("Error: 'changepassword' needs a username and a password.\n");
+                print_usage(&args[0]);
+                return;
+            }
+            change_password(&args[2], &args[3]).await;
+        }
+        "createuser" => {
+            if args.len() < 4 {
+                println!("Error: 'createuser' needs a username and a password.\n");
+                print_usage(&args[0]);
+                return;
+            }
+            create_user(&args[2], &args[3]).await;
+        }
+        other => {
+            println!("Error: unknown command '{other}'.\n");
+            print_usage(&args[0]);
+        }
     }
 }
 
 async fn change_password(user_name: &str, password: &str) {
-    println!(
-        "Changing NewUser with Username: {} and Password: {}",
-        user_name, password
-    );
+    println!("Changing password for user '{user_name}'...");
     let pg_pool = get_pool().await;
 
     let query_status = sqlx::query("UPDATE users SET password_hash=$2 WHERE username=$1")
@@ -46,16 +66,19 @@ async fn change_password(user_name: &str, password: &str) {
         .await;
 
     match query_status {
-        Ok(_) => println!("Password Changed"),
-        Err(e) => println!("something went wrong {}", e),
+        Ok(result) => {
+            if result.rows_affected() == 0 {
+                println!("No user named '{user_name}' was found. Password not changed.");
+            } else {
+                println!("Password changed successfully for '{user_name}'.");
+            }
+        }
+        Err(e) => println!("Failed to change password: {e}"),
     }
 }
 
 async fn create_user(user_name: &str, password: &str) {
-    println!(
-        "Createing New User {} with password {}",
-        user_name, password
-    );
+    println!("Creating new user '{user_name}'...");
     let pg_pool = get_pool().await;
 
     let query_status = sqlx::query("insert into users (username,password_hash) values ($1,$2)")
@@ -65,7 +88,7 @@ async fn create_user(user_name: &str, password: &str) {
         .await;
 
     match query_status {
-        Ok(_) => println!("User Created"),
-        Err(e) => println!("something went wrong {}", e),
+        Ok(_) => println!("User '{user_name}' created successfully."),
+        Err(e) => println!("Failed to create user: {e}"),
     }
 }

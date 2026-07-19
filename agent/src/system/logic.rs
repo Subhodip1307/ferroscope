@@ -111,9 +111,9 @@ fn read_diskstats() -> Vec<__DiskData> {
 
             Some(__DiskData {
                 name,
-                reads_completed: fields[3].parse().unwrap_or(0),
+                // reads_completed: fields[3].parse().unwrap_or(0),
                 sectors_read: fields[5].parse().unwrap_or(0),
-                writes_completed: fields[7].parse().unwrap_or(0),
+                // writes_completed: fields[7].parse().unwrap_or(0),
                 sectors_written: fields[9].parse().unwrap_or(0),
             })
         })
