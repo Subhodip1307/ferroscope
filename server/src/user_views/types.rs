@@ -1,7 +1,35 @@
 // shared types
 use serde::{Serialize,Deserialize};
+use axum::{response::{IntoResponse, Response},Json};
 
 #[derive(Clone, Serialize,Deserialize)]
 pub struct AuthUser {
     pub user_id: i64,
+}
+
+#[derive(Serialize)]
+pub struct ApiResponse<T> {
+    pub data: T,
+}
+// no need warp with JSON
+impl<T> IntoResponse for ApiResponse<T>
+where
+    T: Serialize,
+{
+    fn into_response(self) -> Response {
+        Json(self).into_response()
+    }
+}
+
+
+#[derive(Serialize)]
+pub struct RespMessage{
+    // to retrun hardcoded messages
+    pub msg: &'static str,
+    pub res:bool
+}
+impl IntoResponse for RespMessage {
+    fn into_response(self) -> Response {
+        Json(self).into_response()
+    }
 }

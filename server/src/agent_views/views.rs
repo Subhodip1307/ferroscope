@@ -16,7 +16,8 @@ pub async fn __system_info(
     Extension(nodes_id): Extension<i64>,
     data: Json<payload::SysInfo>,
 ) -> StatusCode {
-    sqlx::query(
+    // check if inserted is true or false
+    let Result=sqlx::query(
         "INSERT INTO sysinfo (node_id,
                 system_name,
                 kernel_version,
@@ -32,7 +33,9 @@ pub async fn __system_info(
                 os_version     = EXCLUDED.os_version,
                 uptime         = EXCLUDED.uptime,
                 cpu_threads    = EXCLUDED.cpu_threads,
-                cpu_vendor     = EXCLUDED.cpu_vendor;
+                cpu_vendor     = EXCLUDED.cpu_vendor
+                RETURNING xmax = 0 AS inserted;
+                ;
                  ",
     )
     .bind(nodes_id)
@@ -45,6 +48,7 @@ pub async fn __system_info(
     .execute(&db_state.db)
     .await
     .expect("failed to insert user");
+    println!("Result {:?}",Result);
     StatusCode::OK
 }
 
