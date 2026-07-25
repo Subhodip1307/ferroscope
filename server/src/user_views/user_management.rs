@@ -47,6 +47,6 @@ pub (super) async fn __edit_user_details(
     if result.is_err(){//give better error 
         return (StatusCode::INTERNAL_SERVER_ERROR,RespMessage{res:false,msg:"Something went wrong"});
      }
-     (StatusCode::CREATED,RespMessage{res:false,msg:"User data updated"})
+     (StatusCode::CREATED,RespMessage{res:true,msg:"User data updated"})
     //  StatusCode::CREATED
 }
