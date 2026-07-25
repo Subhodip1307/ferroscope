@@ -100,3 +100,19 @@ export interface Rule {
   condition: Condition;
   action: RuleAction;
 }
+
+// ─── User Access Control Types ───────────────────────────────────────────────
+export interface UserAccessControlItem {
+  id: number;
+  username: string;
+  email: string | null;
+  joined_date: string;
+}
+
+export interface EditUserPayload {
+  id: number;
+  username: string;
+  email?: string | null;
+  password?: string | null;
+}
+

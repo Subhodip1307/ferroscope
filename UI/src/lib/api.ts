@@ -14,6 +14,8 @@ import type {
   ChangePasswordCredentials,
   Rule,
   DiskData,
+  UserAccessControlItem,
+  EditUserPayload,
 } from "@/types";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -27,6 +29,7 @@ const getBaseUrl = () => {
 const getApiUrl = () => `${getBaseUrl()}/view`;
 const getAuthUrl = () => `${getBaseUrl()}/auth`;
 const getWriteUrl = () => `${getBaseUrl()}/write`;
+const getAccessControlUrl = () => `${getBaseUrl()}/access-control`;
 
 const getHeaders = () => {
   const token =
@@ -258,6 +261,36 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(rule),
     });
+    return response.status === 201;
+  },
+
+  // ─── User Access Control ───────────────────────────────────────────────────
+  async getAllUsers(): Promise<UserAccessControlItem[]> {
+    const response = await fetch(`${getAccessControlUrl()}/all_users`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    const result = await handleResponse<{ data: UserAccessControlItem[] }>(response, { data: [] });
+    return result?.data ?? [];
+  },
+
+  async deleteUser(userId: number): Promise<boolean> {
+    const response = await fetch(`${getAccessControlUrl()}/delete_user`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ user_id: userId }),
+    });
+    // Any 200 OK is success; any non-200 is failure.
+    return response.ok && response.status === 200;
+  },
+
+  async editUserDetails(payload: EditUserPayload): Promise<boolean> {
+    const response = await fetch(`${getAccessControlUrl()}/edit_user_details`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    // Rely strictly on HTTP 201 Created status due to server-side bug with 'res' flag
     return response.status === 201;
   },
 };
