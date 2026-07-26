@@ -1,6 +1,6 @@
 // use super::response::AuthUser;
-use crate::user_views::types::AuthUser;
 use crate::state::AppState;
+use crate::user_views::types::AuthUser;
 use axum::{
     extract::State,
     http::{Request, StatusCode},
@@ -23,6 +23,7 @@ pub async fn user_auth(
         let out_put: (bool, i64) = match db_state.cache.get(&cache_key) {
             Some(value) => (true, value),
             None => {
+                // TODO: change ::query with query_scalar
                 let fetch_data = sqlx::query("SELECT user_id FROM auth_tokens where token=$1")
                     .persistent(true)
                     .bind(auth_str)

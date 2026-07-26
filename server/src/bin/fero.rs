@@ -18,7 +18,10 @@ async fn get_pool() -> Pool<Postgres> {
 fn print_usage(program: &str) {
     println!("Usage:");
     println!("  {program} createuser <username> <password>       Create a new user");
-    println!("  {program} changepassword <username> <password>   Change an existing user's password");
+    println!("  {program} createsuperuser <username> <password>       Create a new super-user");
+    println!(
+        "  {program} changepassword <username> <password>   Change an existing user's password"
+    );
 }
 
 #[tokio::main]
@@ -46,8 +49,17 @@ async fn main() {
                 print_usage(&args[0]);
                 return;
             }
-            create_user(&args[2], &args[3]).await;
+            create_user(&args[2], &args[3], false).await;
         }
+        "createsuperuser" => {
+            if args.len() < 4 {
+                println!("Error: 'createuser' needs a username and a password.\n");
+                print_usage(&args[0]);
+                return;
+            }
+            create_superuser(&args[2], &args[3]).await;
+        }
+
         other => {
             println!("Error: unknown command '{other}'.\n");
             print_usage(&args[0]);
@@ -77,18 +89,24 @@ async fn change_password(user_name: &str, password: &str) {
     }
 }
 
-async fn create_user(user_name: &str, password: &str) {
+async fn create_user(user_name: &str, password: &str, is_super_user: bool) {
     println!("Creating new user '{user_name}'...");
     let pg_pool = get_pool().await;
 
-    let query_status = sqlx::query("insert into users (username,password_hash) values ($1,$2)")
-        .bind(user_name)
-        .bind(hash_password(password))
-        .execute(&pg_pool)
-        .await;
+    let query_status =
+        sqlx::query("insert into users (username,password_hash,is_admin) values ($1,$2,$3)")
+            .bind(user_name)
+            .bind(hash_password(password))
+            .bind(is_super_user)
+            .execute(&pg_pool)
+            .await;
 
     match query_status {
         Ok(_) => println!("User '{user_name}' created successfully."),
         Err(e) => println!("Failed to create user: {e}"),
     }
+}
+
+async fn create_superuser(user_name: &str, password: &str) {
+    create_user(user_name, password, true).await;
 }

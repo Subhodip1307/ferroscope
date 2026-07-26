@@ -28,7 +28,7 @@ impl __MessageBody {
         }
     }
 
-    pub fn get_unique_id(&self)->i64{
+    pub fn get_unique_id(&self) -> i64 {
         match self {
             __MessageBody::Node(n) => n.unique_id,
             __MessageBody::Service(s) => s.unique_id,
@@ -59,4 +59,3 @@ pub(super) struct __WebHookMEssageBody {
     pub destination: Vec<String>,
     pub value: Value,
 }
-

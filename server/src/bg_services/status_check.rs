@@ -32,10 +32,9 @@ pub async fn node_status_check(app_state: AppState) {
                 let cpu_ket = &format!("node_cpu_strem_{}", key);
                 let ram_key = &format!("node_ram_strem_{}", key);
                 let disk_key = &format!("node_diskio_strem_{}", key);
-                 app_data.stream_data.remove(cpu_ket);
-                 app_data.stream_data.remove(ram_key);
-                 app_data.stream_data.remove(disk_key);
-            
+                app_data.stream_data.remove(cpu_ket);
+                app_data.stream_data.remove(ram_key);
+                app_data.stream_data.remove(disk_key);
             } //end for
         }
     });

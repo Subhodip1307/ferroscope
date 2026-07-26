@@ -71,9 +71,9 @@ pub struct BGRulesData {
     pub action_json: Json<BGNotify>,
 }
 
-#[derive(Clone,Deserialize, Debug)]
-pub struct DiskIoStats{
-    pub name:String,
-    pub read:f64,
-    pub write:f64
+#[derive(Clone, Deserialize, Debug)]
+pub struct DiskIoStats {
+    pub name: String,
+    pub read: f64,
+    pub write: f64,
 }

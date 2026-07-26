@@ -1,9 +1,9 @@
 use super::payloads;
 use super::response as get_payload;
+use super::types::AuthUser;
 use crate::state::AppState;
 use axum::{Extension, Json, extract::State, http::StatusCode};
 use uuid::Uuid;
-use super::types::AuthUser;
 
 pub(super) async fn __create_node(
     State(db_state): State<AppState>,

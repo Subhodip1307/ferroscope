@@ -1,7 +1,10 @@
 use super::middleware::user_auth;
 use crate::state::AppState;
 use axum::middleware::from_fn_with_state;
-use axum::{Router,routing::{get, post}};
+use axum::{
+    Router,
+    routing::{get, post},
+};
 
 pub fn auth_routers(app_state: AppState) -> Router {
     use super::auth;
@@ -59,17 +62,18 @@ fn write_routers(app_state: AppState) -> Router {
         .with_state(app_state)
 }
 
-fn access_control(app_state: AppState)->Router{
+fn access_control(app_state: AppState) -> Router {
     use super::user_management;
-     Router::new()
+    Router::new()
         .route("/all_users", get(user_management::__get_all_user_list))
         .route("/delete_user", post(user_management::__delete_user))
-        .route("/edit_user_details", post(user_management::__edit_user_details))
+        .route(
+            "/edit_user_details",
+            post(user_management::__edit_user_details),
+        )
         .route_layer(from_fn_with_state(app_state.clone(), user_auth))
         .with_state(app_state)
-
 }
-
 
 pub fn base_routers(app_state: AppState) -> Router {
     Router::new()

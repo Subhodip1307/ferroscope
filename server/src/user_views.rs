@@ -1,12 +1,12 @@
-mod read;
-mod urls;
 mod auth;
-mod write;
 mod payloads;
+mod read;
 mod response;
-pub mod types;
 mod streaming;
+pub mod types;
+mod urls;
 mod user_management;
-pub use urls::base_routers;
+mod write;
 use crate::middleware::user_auth as middleware;
-pub use response::{LatestCpu, LatestRam,NodeDiskIoStats};
+pub use response::{LatestCpu, LatestRam, NodeDiskIoStats};
+pub use urls::base_routers;

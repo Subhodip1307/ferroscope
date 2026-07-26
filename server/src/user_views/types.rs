@@ -1,8 +1,11 @@
 // shared types
-use serde::{Serialize,Deserialize};
-use axum::{response::{IntoResponse, Response},Json};
+use axum::{
+    Json,
+    response::{IntoResponse, Response},
+};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize,Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct AuthUser {
     pub user_id: i64,
 }
@@ -21,12 +24,11 @@ where
     }
 }
 
-
 #[derive(Serialize)]
-pub struct RespMessage{
+pub struct RespMessage {
     // to retrun hardcoded messages
     pub msg: &'static str,
-    pub res:bool
+    pub res: bool,
 }
 impl IntoResponse for RespMessage {
     fn into_response(self) -> Response {

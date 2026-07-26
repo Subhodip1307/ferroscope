@@ -48,9 +48,15 @@ pub(super) async fn webhook_sender_worker(mut receiver: mpsc::Receiver<__WebHook
         .expect("errr");
     while let Some(msg) = receiver.recv().await {
         for recipient in msg.destination {
-           if api_client.post(&recipient).json(&msg.value).send().await.is_err(){
-            println!("WebHook API issue: {}",recipient);
-           };
+            if api_client
+                .post(&recipient)
+                .json(&msg.value)
+                .send()
+                .await
+                .is_err()
+            {
+                println!("WebHook API issue: {}", recipient);
+            };
         }
     } //end while
 }

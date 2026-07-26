@@ -1,2 +1,2 @@
-pub mod user_auth;
 pub mod agent_auth;
+pub mod user_auth;

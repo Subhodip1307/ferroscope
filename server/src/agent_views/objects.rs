@@ -38,3 +38,7 @@ pub(super) struct UpdateUptime {
     pub uptime_sec: i64,
 }
 
+// #[derive(sqlx::FromRow)]
+// pub (super) struct InsertOrUpdate{
+//    pub inserted:bool
+// }

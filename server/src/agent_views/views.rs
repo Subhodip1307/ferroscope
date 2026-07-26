@@ -1,15 +1,13 @@
-use std::sync::Arc;
-
 use super::objects as payload;
-use crate::state::{AppState,StreamPayLoad};
-use crate::user_views::{LatestCpu, LatestRam,NodeDiskIoStats};
+use crate::state::{AppState, StreamPayLoad};
+use crate::user_views::{LatestCpu, LatestRam, NodeDiskIoStats};
 use axum::http::StatusCode;
 use axum::{Extension, Json, extract::State};
 use chrono::Utc;
 use ferroscope_server::global::structure::{EventType, NotificationData};
 use sqlx::Row;
+use std::sync::Arc;
 use tokio::sync::watch;
-
 
 pub async fn __system_info(
     State(db_state): State<AppState>,
@@ -17,7 +15,7 @@ pub async fn __system_info(
     data: Json<payload::SysInfo>,
 ) -> StatusCode {
     // check if inserted is true or false
-    let Result=sqlx::query(
+    sqlx::query(
         "INSERT INTO sysinfo (node_id,
                 system_name,
                 kernel_version,
@@ -34,10 +32,10 @@ pub async fn __system_info(
                 uptime         = EXCLUDED.uptime,
                 cpu_threads    = EXCLUDED.cpu_threads,
                 cpu_vendor     = EXCLUDED.cpu_vendor
-                RETURNING xmax = 0 AS inserted;
                 ;
                  ",
     )
+    // RETURNING xmax = 0 AS inserted;
     .bind(nodes_id)
     .bind(&data.system_name)
     .bind(&data.kernel_version)
@@ -48,7 +46,7 @@ pub async fn __system_info(
     .execute(&db_state.db)
     .await
     .expect("failed to insert user");
-    println!("Result {:?}",Result);
+    // println!("Result {:?}",Result);
     StatusCode::OK
 }
 
@@ -81,13 +79,13 @@ pub async fn __cpu_metrix(
         .stream_data
         .entry(node_key)
         .and_modify(|sender| {
-            let _ = sender.send(  StreamPayLoad::Cpu( LatestCpu {
+            let _ = sender.send(StreamPayLoad::Cpu(LatestCpu {
                 value: data.cpu,
                 date_time: Utc::now(),
             }));
         })
         .or_insert({
-            let (tx, _) = watch::channel(StreamPayLoad::Cpu( LatestCpu {
+            let (tx, _) = watch::channel(StreamPayLoad::Cpu(LatestCpu {
                 value: data.cpu,
                 date_time: Utc::now(),
             }));
@@ -116,22 +114,24 @@ pub async fn __memory_metrix(
     }
 
     let node_key = format!("node_ram_strem_{nodes_id}");
-    db_state.stream_data.entry(node_key)
-    .and_modify(|tx|{
-        _=tx.send(StreamPayLoad::Ram(LatestRam {
-            timestamp: Utc::now(),
-            free: data.free.clone(),
-            total: data.total.clone(),
-        }));
-    })
-    .or_insert_with(||{
-        let (tx, _) = watch::channel(StreamPayLoad::Ram(LatestRam {
-            timestamp: Utc::now(),
-            free: data.free.clone(),
-            total: data.total.clone(),
-        }));
-        tx
-    });
+    db_state
+        .stream_data
+        .entry(node_key)
+        .and_modify(|tx| {
+            _ = tx.send(StreamPayLoad::Ram(LatestRam {
+                timestamp: Utc::now(),
+                free: data.free.clone(),
+                total: data.total.clone(),
+            }));
+        })
+        .or_insert_with(|| {
+            let (tx, _) = watch::channel(StreamPayLoad::Ram(LatestRam {
+                timestamp: Utc::now(),
+                free: data.free.clone(),
+                total: data.total.clone(),
+            }));
+            tx
+        });
     StatusCode::OK
 }
 
@@ -199,23 +199,32 @@ pub async fn __helth_check(Extension(nodes_id): Extension<i64>, State(db_state):
         .or_insert(current);
 }
 
-
 pub async fn __disk_io(
-    Extension(nodes_id): Extension<i64>, State(db_state): State<AppState>,
-    data:Json<Vec<ferroscope_server::global::structure::DiskIoStats>>
-){
+    Extension(nodes_id): Extension<i64>,
+    State(db_state): State<AppState>,
+    data: Json<Vec<ferroscope_server::global::structure::DiskIoStats>>,
+) {
     // println!("runing disk_io");
-    let all_disk:Arc<Vec<NodeDiskIoStats>>=Arc::new(data.0.into_iter().map(|i|NodeDiskIoStats{read:i.read,write:i.write,timestamp:Utc::now()}).collect());
+    let all_disk: Arc<Vec<NodeDiskIoStats>> = Arc::new(
+        data.0
+            .into_iter()
+            .map(|i| NodeDiskIoStats {
+                read: i.read,
+                write: i.write,
+                timestamp: Utc::now(),
+            })
+            .collect(),
+    );
     // println!("data is {:?}",all_disk);
     let node_key = format!("node_diskio_strem_{nodes_id}");
-    db_state.stream_data.entry(node_key)
-    .and_modify(|tx|{
-        _=tx.send(StreamPayLoad::Disk(all_disk.clone()));
-    })
-    .or_insert_with(||{
-        let (tx, _) = watch::channel(StreamPayLoad::Disk(
-            all_disk
-        ));
-        tx
-    });
+    db_state
+        .stream_data
+        .entry(node_key)
+        .and_modify(|tx| {
+            _ = tx.send(StreamPayLoad::Disk(all_disk.clone()));
+        })
+        .or_insert_with(|| {
+            let (tx, _) = watch::channel(StreamPayLoad::Disk(all_disk));
+            tx
+        });
 }

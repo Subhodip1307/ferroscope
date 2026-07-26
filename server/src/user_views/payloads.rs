@@ -50,7 +50,7 @@ impl std::fmt::Display for EventType {
     }
 }
 
-#[derive(Deserialize,Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Notify {
     channel: Json<NotificationChannel>,
     to: Vec<String>,
@@ -66,11 +66,20 @@ pub struct RulesData {
     pub action: Json<Notify>,
 }
 
+#[derive(Deserialize)]
+pub struct UserDetailsEdit {
+    pub id: i64,
+    pub username: String,
+    pub is_admin: bool,
+    pub email: Option<String>,
+    pub password: Option<String>,
+}
 
 #[derive(Deserialize)]
-pub struct UserDetailsEdit{
-   pub id:i64,
-   pub username:String,
-   pub email:Option<String>,
-   pub password:Option<String>
+pub struct UserDetails {
+    pub id: i64,
+    pub username: String,
+    pub is_admin: bool,
+    pub email: Option<String>,
+    pub password: String,
 }

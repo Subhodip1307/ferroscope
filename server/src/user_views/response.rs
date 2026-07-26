@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
-use serde::{Serialize};
+use serde::Serialize;
 use time::OffsetDateTime;
-
 
 #[derive(Clone, Serialize)]
 pub(super) struct AuthuserIdPassword {
@@ -74,18 +73,18 @@ pub(super) struct __ArrayType<'a> {
     pub data: Vec<&'a str>,
 }
 
-#[derive(Serialize, Debug,Clone)]
-pub struct NodeDiskIoStats{
-   pub read:f64,
-   pub write:f64,
-   pub timestamp: DateTime<Utc>,
-
+#[derive(Serialize, Debug, Clone)]
+pub struct NodeDiskIoStats {
+    pub read: f64,
+    pub write: f64,
+    pub timestamp: DateTime<Utc>,
 }
 
 #[derive(Debug, Serialize, sqlx::FromRow)]
-pub struct UserList{
-    id:i64,
-    username:String,
-    email:Option<String>,
-    joined_date:DateTime<Utc>
+pub struct UserList {
+    id: i64,
+    username: String,
+    is_admin: bool,
+    email: Option<String>,
+    joined_date: DateTime<Utc>,
 }
