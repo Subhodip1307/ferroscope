@@ -66,6 +66,7 @@ fn access_control(app_state: AppState) -> Router {
     use super::user_management;
     Router::new()
         .route("/all_users", get(user_management::__get_all_user_list))
+        .route("/create_user", get(user_management::__create_user))
         .route("/delete_user", post(user_management::__delete_user))
         .route(
             "/edit_user_details",

@@ -3,13 +3,13 @@ use super::response as get_payload;
 use super::types::AuthUser;
 use crate::state::AppState;
 use axum::{Extension, Json, extract::State, http::StatusCode};
-use uuid::Uuid;
+
 
 pub(super) async fn __create_node(
     State(db_state): State<AppState>,
     Json(params): Json<payloads::CreateNode>,
 ) -> Result<(StatusCode, Json<get_payload::AuthToken>), StatusCode> {
-    let token = Uuid::new_v4().to_string();
+    let token = ferroscope_server::global::utils_functions::genarate_token_auth();
     let create: Result<sqlx::postgres::PgQueryResult, sqlx::Error> = sqlx::query(
         "INSERT INTO nodes (name,token) VALUES
         ($1,$2);

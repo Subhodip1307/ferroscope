@@ -16,7 +16,6 @@ axum = "0.8.8"
 serde = { version = "1.0.228", features = ["derive"] }
 chrono = { version = "0.4.43", features = ["serde"] }
 tower-http = { version = "0.5", features = ["cors"] }
-uuid = { version="1.21.0" ,features = ["v4"]}
 argon2 = "0.5.3"
 password-hash = "0.5.0"
 rand = "0.8.0"
@@ -28,6 +27,7 @@ time = { version = "0.3", features = ["serde"] }
 lettre = {version = "0.11.20", default-features = false,features = ["tokio1-rustls-tls", "smtp-transport", "builder","pool"] }
 reqwest = { version = "0.12", default-features = false,features = ["json", "rustls-tls-webpki-roots"] }
 serde_json = "1.0.149"
+base64 = "0.23.0"
 
 [features]
 disable_auth=[]

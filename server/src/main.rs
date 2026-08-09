@@ -8,7 +8,7 @@ mod process;
 use tokio::sync::mpsc;
 mod app;
 mod middleware;
-
+mod db;
 #[tokio::main]
 async fn main() {
     println!("Runing Version : {}", env!("CARGO_PKG_VERSION"));

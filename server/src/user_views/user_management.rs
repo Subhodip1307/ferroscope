@@ -59,7 +59,6 @@ pub(super) async fn __create_user(
     .bind(user.email)
     .bind(user.is_admin)
     .bind(hash_password(&user.password))
-    //TODO: imporve Error
     .execute(&db_state.db).await.map_err(|e|{
         if let sqlx::Error::Database(db_err)=e{
             if db_err.is_unique_violation(){
@@ -74,7 +73,13 @@ pub(super) async fn __create_user(
 pub(super) async fn __get_all_user_list(
     State(db_state): State<AppState>,
     Extension(auth_user): Extension<AuthUser>,
-) -> ApiResponse<Vec<response::UserList>> {
+)-> Result<ApiResponse<Vec<response::UserList>>,(StatusCode, RespMessage)> {
+    check_admin(
+        &db_state.db,
+        auth_user.user_id,
+        "You don't have permission to delete this user.",
+    )
+    .await?;
     // get list of all users except current user
     let user_row = sqlx::query_as::<_, response::UserList>(
         "SELECT id,username,email,joined_date,is_admin FROM users where id != $1",
@@ -83,7 +88,7 @@ pub(super) async fn __get_all_user_list(
     .fetch_all(&db_state.db)
     .await
     .unwrap();
-    ApiResponse { data: user_row }
+    Ok(ApiResponse { data: user_row })
 }
 
 pub(super) async fn __delete_user(
@@ -155,3 +160,5 @@ pub(super) async fn __edit_user_details(
     ))
     //  StatusCode::CREATED
 }
+
+// assigin Permission

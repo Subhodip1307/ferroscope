@@ -6,7 +6,6 @@ use axum::{Extension, Json, extract::State, http::StatusCode};
 use ferroscope_server::global::utils_functions::{hash_password, verify_password};
 use sqlx::Row;
 use std::collections::HashMap;
-use uuid::Uuid;
 
 pub(super) async fn __loginuser(
     State(db_state): State<AppState>,
@@ -40,7 +39,7 @@ pub(super) async fn __loginuser(
             .unwrap();
 
         // creating token
-        let token = Uuid::new_v4().to_string();
+        let token = ferroscope_server::global::utils_functions::genarate_token_auth();
 
         sqlx::query("insert into auth_tokens (user_id, token) values ($1,$2)")
             .persistent(true)

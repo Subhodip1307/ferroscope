@@ -161,6 +161,7 @@ pub async fn __service_monitor(
     .fetch_one(&db_state.db)
     .await.expect("failed to update service data");
     if data.status == "down" {
+        //TODO: no need to send multiple times the same data
         println!("the status is down");
         let _ = db_state
             .notifier
