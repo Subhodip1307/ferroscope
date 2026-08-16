@@ -161,4 +161,75 @@ pub(super) async fn __edit_user_details(
     //  StatusCode::CREATED
 }
 
-// assigin Permission
+// assign Permission
+pub(super) async fn __assign_permission(
+    State(db_state): State<AppState>,
+    Extension(user): Extension<AuthUser>,
+    Json(data): Json<payloads::AssignPermission>,
+) -> ApiResult {
+    check_admin(
+        &db_state.db,
+        user.user_id,
+        "You don't have permission to edit this user.",
+    )
+    .await?;
+
+    // flatten everything up front
+    let node_ids: Vec<i64> = data.nodes_permissions.iter().map(|n| n.node_id).collect();
+
+    let (metric_node_ids, metric_names): (Vec<i64>, Vec<String>) = data
+        .nodes_permissions
+        .iter()
+        .flat_map(|n| {
+            n.metrix
+                .iter()
+                .flatten()
+                .map(move |m| (n.node_id, m.to_string()))
+        })
+        .unzip();
+    let service_ids: Vec<i64> = data
+        .nodes_permissions
+        .iter()
+        .flat_map(|n| n.services.iter().flatten().copied())
+        .collect();
+
+    let mut tx = db_state.db.begin().await.unwrap();
+
+    sqlx::query(
+        "INSERT INTO user_node_access (user_id, node_id)
+         SELECT $1, * FROM UNNEST($2::bigint[])",
+    )
+    .bind(data.user_id)
+    .bind(&node_ids)
+    .execute(&mut *tx)
+    .await.unwrap();
+
+    sqlx::query(
+        "INSERT INTO user_node_metric_access (user_id, node_id, metric_name)
+         SELECT $1, * FROM UNNEST($2::bigint[], $3::text[])",
+    )
+    .bind(data.user_id)
+    .bind(&metric_node_ids)
+    .bind(&metric_names)
+    .execute(&mut *tx)
+    .await.unwrap();
+
+    sqlx::query(
+        "INSERT INTO user_node_service_access (user_id, service_id)
+         SELECT $1, * FROM UNNEST($2::bigint[])",
+    )
+    .bind(data.user_id)
+    .bind(&service_ids)
+    .execute(&mut *tx)
+    .await.unwrap();
+
+    tx.commit().await.unwrap();
+
+    Ok((
+        StatusCode::CREATED,
+        RespMessage {
+            res: true,
+            msg: "User data updated",
+        },
+    ))
+}

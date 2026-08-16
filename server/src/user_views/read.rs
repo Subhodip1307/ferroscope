@@ -141,6 +141,23 @@ pub(super) async fn __get_all_service_of_node(
     }
     (StatusCode::OK, Json(grouped))
 }
+pub(super) async fn __get_all_service_name_of_node(
+    State(db_state): State<AppState>,
+    Query(params): Query<payloads::IdQuery>,
+)-> (
+    StatusCode,
+    Json<Vec<String>>,
+) 
+{
+    let rows: Vec<String> = sqlx::query_scalar(
+        "SELECT service_name FROM service_monitor where node_id = $1",
+    )
+    .bind(params.node)
+    .fetch_all(&db_state.db)
+    .await
+    .unwrap();
+    (StatusCode::OK,Json(rows))
+}
 
 pub(super) async fn __get_single_service_current_status(
     State(db_state): State<AppState>,

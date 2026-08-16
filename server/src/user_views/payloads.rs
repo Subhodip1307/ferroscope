@@ -77,9 +77,37 @@ pub struct UserDetailsEdit {
 
 #[derive(Deserialize)]
 pub struct UserDetails {
-    pub id: i64,
     pub username: String,
     pub is_admin: bool,
     pub email: Option<String>,
     pub password: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub enum Metrixs {
+    RAM,
+    CPU,
+    DISK,
+}
+impl std::fmt::Display for Metrixs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Metrixs::RAM => write!(f, "RAM"),
+            Metrixs::CPU => write!(f, "CPU"),
+            Metrixs::DISK => write!(f, "DISK"),
+        }
+    }
+}
+
+#[derive(Deserialize,Debug)]
+pub struct UserPermissions{
+    pub node_id:i64,
+    pub metrix:Option<Vec<Metrixs>>, //Allowed Metrixs 
+    pub services:Option<Vec<i64>> //Services id list
+}
+
+#[derive(Deserialize,Debug)]
+pub struct AssignPermission{//it's a payload
+    pub user_id:i64,
+    pub nodes_permissions:Vec<UserPermissions>
 }
