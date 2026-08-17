@@ -71,6 +71,7 @@ fn access_control(app_state: AppState) -> Router {
         .route("/delete_user", post(user_management::__delete_user))
         .route("/edit_user_details",post(user_management::__edit_user_details))
         .route("/assign_permission",post(user_management::__assign_permission))
+        .route("/users/{user_id}/permissions", get(user_management::__get_user_permissions))
         .route_layer(from_fn_with_state(app_state.clone(), user_auth))
         .with_state(app_state)
 }

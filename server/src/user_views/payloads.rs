@@ -103,7 +103,8 @@ impl std::fmt::Display for Metrixs {
 pub struct UserPermissions{
     pub node_id:i64,
     pub metrix:Option<Vec<Metrixs>>, //Allowed Metrixs 
-    pub services:Option<Vec<i64>> //Services id list
+    pub services:Option<Vec<i64>>, //Services id list
+    pub full_permission:Option<bool>
 }
 
 #[derive(Deserialize,Debug)]

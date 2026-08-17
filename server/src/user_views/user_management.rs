@@ -3,8 +3,9 @@ use super::payloads;
 use super::response;
 use super::types::{ApiResponse, AuthUser, RespMessage};
 use crate::state::AppState;
-use axum::{Extension, Json, extract::State, http::StatusCode};
+use axum::{Extension, Json, extract::{State,Path}, http::StatusCode};
 use ferroscope_server::global::utils_functions::hash_password;
+use std::collections::HashMap;
 // helping function  to check if it's user is a admin or not
 // may switch the poistion in future if required
 async fn check_admin(
@@ -175,7 +176,10 @@ pub(super) async fn __assign_permission(
     .await?;
 
     // flatten everything up front
-    let node_ids: Vec<i64> = data.nodes_permissions.iter().map(|n| n.node_id).collect();
+    let (node_ids,is_full_power):(Vec<i64>,Vec<bool>)=
+    data.nodes_permissions.iter().map(|n|{
+        (n.node_id,n.full_permission.unwrap_or(false))
+    }).unzip();
 
     let (metric_node_ids, metric_names): (Vec<i64>, Vec<String>) = data
         .nodes_permissions
@@ -197,10 +201,11 @@ pub(super) async fn __assign_permission(
 
     sqlx::query(
         "INSERT INTO user_node_access (user_id, node_id)
-         SELECT $1, * FROM UNNEST($2::bigint[])",
+         SELECT $1, * FROM UNNEST($2::bigint[],$3::boolean[])",
     )
     .bind(data.user_id)
     .bind(&node_ids)
+    .bind(&is_full_power)
     .execute(&mut *tx)
     .await.unwrap();
 
@@ -233,3 +238,80 @@ pub(super) async fn __assign_permission(
         },
     ))
 }
+
+
+pub(super) async fn __get_user_permissions(
+    State(db_state): State<AppState>,
+    Extension(user): Extension<AuthUser>,
+    Path(target_user_id): Path<i64>,
+) -> Result<ApiResponse<response::UserPermissionsResponse>,(StatusCode, RespMessage)> {
+    check_admin(
+        &db_state.db,
+        user.user_id,
+        "You don't have permission to view this user.",
+    )
+    .await?;
+
+    // 1. base node access
+    let nodes: Vec<(i64, bool)> = sqlx::query_as(
+        "SELECT node_id, is_full_access
+         FROM user_node_access
+         WHERE user_id = $1",
+    )
+    .bind(target_user_id)
+    .fetch_all(&db_state.db)
+    .await.unwrap();
+
+    // 2. metrics
+    let metrics: Vec<(i64, String)> = sqlx::query_as(
+        "SELECT node_id, metric_name
+         FROM user_node_metric_access
+         WHERE user_id = $1",
+    )
+    .bind(target_user_id)
+    .fetch_all(&db_state.db)
+    .await.unwrap();
+
+    // 3. services — join through service_monitor to know which node each belongs to
+    let services: Vec<(i64, i64)> = sqlx::query_as(
+        "SELECT sm.node_id, usa.service_id
+         FROM user_node_service_access usa
+         JOIN service_monitor sm ON sm.id = usa.service_id
+         WHERE usa.user_id = $1",
+    )
+    .bind(target_user_id)
+    .fetch_all(&db_state.db)
+    .await.unwrap();
+
+    // merge everything keyed by node_id
+    let mut map: HashMap<i64, response::NodePermissionView> = nodes
+        .into_iter()
+        .map(|(node_id, is_full_access)| {
+            (node_id, response::NodePermissionView {
+                node_id,
+                is_full_access,
+                metrix: Vec::new(),
+                services: Vec::new(),
+            })
+        })
+        .collect();
+
+    for (node_id, metric) in metrics {
+        if let Some(n) = map.get_mut(&node_id) {
+            n.metrix.push(metric);
+        }
+    }
+    for (node_id, service_id) in services {
+        if let Some(n) = map.get_mut(&node_id) {
+            n.services.push(service_id);
+        }
+    }
+
+    let resp = response::UserPermissionsResponse {
+        user_id: target_user_id,
+        nodes_permissions: map.into_values().collect(),
+    };
+
+    Ok(ApiResponse { data: resp })
+}
+

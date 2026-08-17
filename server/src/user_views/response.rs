@@ -88,3 +88,17 @@ pub struct UserList {
     email: Option<String>,
     joined_date: DateTime<Utc>,
 }
+
+#[derive(Serialize, Debug)]
+pub struct NodePermissionView {
+    pub node_id: i64,
+    pub is_full_access: bool,
+    pub metrix: Vec<String>,      // ["RAM", "CPU"]
+    pub services: Vec<i64>,       // service ids
+}
+
+#[derive(Serialize, Debug)]
+pub struct UserPermissionsResponse {
+    pub user_id: i64,
+    pub nodes_permissions: Vec<NodePermissionView>,
+}
