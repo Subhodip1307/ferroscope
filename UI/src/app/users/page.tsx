@@ -4,11 +4,10 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/dashboard/Header";
-import { TimeFormatter } from "@/components/ui/TimeFormatter";
-import { EditUserModal } from "@/components/users/EditUserModal";
+import { UserFormModal } from "@/components/users/UserFormModal";
 import { DeleteUserModal } from "@/components/users/DeleteUserModal";
 import { api } from "@/lib/api";
-import type { UserAccessControlItem } from "@/types";
+import type { UserAccessControlItem, UserPermissionsResponse } from "@/types";
 import { toast } from "sonner";
 import {
   Users,
@@ -26,24 +25,42 @@ import {
   ArrowLeft,
   ChevronRight,
   Filter,
+  User,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { formatDateTime } from "@/lib/utils";
+import { PermissionsModal } from "@/components/users/PermissionsModal";
 
 export default function UsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<UserAccessControlItem[]>([]);
+  const [userModalMode, setUserModalMode] = useState<"create" | "edit" | null>(
+    null,
+  );
+  const [userToEdit, setUserToEdit] = useState<UserAccessControlItem | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterEmailStatus, setFilterEmailStatus] = useState<"all" | "has_email" | "no_email">("all");
+  const [filterEmailStatus, setFilterEmailStatus] = useState<
+    "all" | "has_email" | "no_email"
+  >("all");
+
+  const [userPermissionsMap, setUserPermissionsMap] = useState<
+    Map<number, UserPermissionsResponse>
+  >(new Map());
+
+  const [permissionsUser, setPermissionsUser] =
+    useState<UserAccessControlItem | null>(null);
 
   // Snapshot of last server-confirmed list for revert on API failure
   const usersSnapshot = useRef<UserAccessControlItem[]>([]);
 
-  // Modal states
-  const [editingUser, setEditingUser] = useState<UserAccessControlItem | null>(null);
-  const [deletingUser, setDeletingUser] = useState<UserAccessControlItem | null>(null);
+  const [deletingUser, setDeletingUser] =
+    useState<UserAccessControlItem | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("ferro_token");
@@ -53,6 +70,29 @@ export default function UsersPage() {
     }
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    if (users.length > 0) {
+      fetchAllUserPermissions();
+    }
+  }, [users]);
+
+  const fetchAllUserPermissions = async () => {
+    const permissionsMap = new Map<number, UserPermissionsResponse>();
+
+    for (const user of users) {
+      try {
+        const perms = await api.getUserPermissions(user.id);
+        if (perms) {
+          permissionsMap.set(user.id, perms);
+        }
+      } catch (error) {
+        console.error(`Error fetching permissions for user ${user.id}:`, error);
+      }
+    }
+
+    setUserPermissionsMap(permissionsMap);
+  };
 
   const fetchUsers = async () => {
     try {
@@ -76,10 +116,7 @@ export default function UsersPage() {
   // ── Optimistic update handlers ────────────────────────────────────────────
   const handleOptimisticEdit = (updated: UserAccessControlItem) => {
     usersSnapshot.current = users; // snapshot before mutation
-    setUsers((prev) =>
-      prev.map((u) => (u.id === updated.id ? updated : u))
-    );
-    setEditingUser(null);
+    setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
   };
 
   const handleOptimisticDelete = (userId: number) => {
@@ -91,7 +128,6 @@ export default function UsersPage() {
   const handleRevert = () => {
     setUsers(usersSnapshot.current);
   };
-
 
   // Filtered users calculation
   const filteredUsers = useMemo(() => {
@@ -117,7 +153,8 @@ export default function UsersPage() {
     const total = users.length;
     const withEmail = users.filter((u) => !!u.email).length;
     const withoutEmail = total - withEmail;
-    return { total, withEmail, withoutEmail };
+    const admins = users.filter((u) => u.is_admin).length;
+    return { total, withEmail, withoutEmail, admins };
   }, [users]);
 
   return (
@@ -155,12 +192,13 @@ export default function UsersPage() {
               <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
                 <Users className="w-6 h-6" />
               </div>
-              <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
+              <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
                 User Directory & Access
               </h1>
             </div>
             <p className="text-sm text-muted-foreground">
-              Manage all registered users, edit profile details, and maintain access permissions across Ferroscope.
+              Manage all registered users, edit profile details, and maintain
+              access permissions across Ferroscope.
             </p>
           </div>
 
@@ -172,21 +210,23 @@ export default function UsersPage() {
               disabled={loading}
               className="gap-2 h-10 px-4 rounded-xl border-border"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
               <span>Refresh</span>
             </Button>
 
             {/* Create User Button (Placeholder per prompt requirement) */}
             <div className="relative group">
               <Button
-                disabled
-                className="gap-2 h-10 px-4 rounded-xl bg-primary/40 text-primary-foreground opacity-70 cursor-not-allowed"
+                onClick={() => {
+                  setUserModalMode("create");
+                  setUserToEdit(null);
+                }}
+                className="gap-2 h-10 px-4 rounded-xl bg-linear-to-r from-primary to-blue-600 hover:opacity-90 transition-all font-bold shadow-md text-primary-foreground"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Create User</span>
-                <span className="ml-1 text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-background/30 border border-white/20">
-                  Soon
-                </span>
               </Button>
             </div>
           </div>
@@ -198,7 +238,7 @@ export default function UsersPage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
         >
           <div className="p-5 rounded-2xl bg-card border border-border shadow-xs hover:border-primary/30 transition-all flex items-center justify-between">
             <div>
@@ -211,6 +251,20 @@ export default function UsersPage() {
             </div>
             <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">
               <UserCheck className="w-6 h-6" />
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-card border border-border shadow-xs hover:border-primary/30 transition-all flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Admins
+              </p>
+              <h3 className="text-3xl font-black mt-1 text-violet-500">
+                {loading ? "..." : stats.admins}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-500 flex items-center justify-center border border-violet-500/20">
+              <ShieldCheck className="w-6 h-6" />
             </div>
           </div>
 
@@ -309,7 +363,11 @@ export default function UsersPage() {
         {/* User Data Table / Cards */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={loading ? "users-loading" : `users-table-${filterEmailStatus}-${searchQuery}`}
+            key={
+              loading
+                ? "users-loading"
+                : `users-table-${filterEmailStatus}-${searchQuery}`
+            }
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -318,7 +376,9 @@ export default function UsersPage() {
             {loading ? (
               <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-4 shadow-xs">
                 <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-muted-foreground text-sm font-medium">Fetching user directory...</p>
+                <p className="text-muted-foreground text-sm font-medium">
+                  Fetching user directory...
+                </p>
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-3 shadow-xs">
@@ -349,7 +409,8 @@ export default function UsersPage() {
                     <thead>
                       <tr className="border-b border-border/80 bg-muted/30 text-muted-foreground text-xs uppercase font-semibold tracking-wider">
                         <th className="py-3.5 px-5">User</th>
-                        <th className="py-3.5 px-5">Email Status</th>
+                        <th className="py-3.5 px-5">Role</th>
+                        <th className="py-3.5 px-5">Email</th>
                         <th className="py-3.5 px-5">Joined Date</th>
                         <th className="py-3.5 px-5 text-right">Actions</th>
                       </tr>
@@ -379,6 +440,19 @@ export default function UsersPage() {
                               </div>
                             </div>
                           </td>
+                          <td className="py-4 px-5">
+                            {user.is_admin ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-500 border border-violet-500/20">
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                Admin
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border">
+                                <User className="w-3.5 h-3.5" />
+                                User
+                              </span>
+                            )}
+                          </td>
 
                           {/* Email */}
                           <td className="py-4 px-5">
@@ -394,9 +468,8 @@ export default function UsersPage() {
                             )}
                           </td>
 
-                          {/* Joined Date using Reusable TimeFormatter */}
                           <td className="py-4 px-5">
-                            <TimeFormatter dateString={user.joined_date} mode="both" />
+                            {formatDateTime(user.joined_date)}
                           </td>
 
                           {/* Action Buttons */}
@@ -405,7 +478,27 @@ export default function UsersPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setEditingUser(user)}
+                                onClick={() => {
+                                  const userWithPerms: UserAccessControlItem = {
+                                    ...user,
+                                    permissions: userPermissionsMap.get(
+                                      user.id,
+                                    ),
+                                  };
+                                  setPermissionsUser(userWithPerms);
+                                }}
+                                className="h-9 px-3 gap-1.5 text-xs font-medium hover:bg-violet-500/10 hover:text-violet-500 transition-colors"
+                              >
+                                <Lock className="w-3.5 h-3.5" />
+                                <span>Permissions</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setUserModalMode("edit");
+                                  setUserToEdit(user);
+                                }}
                                 className="h-9 px-3 gap-1.5 text-xs font-medium hover:bg-primary/10 hover:text-primary transition-colors"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
@@ -430,8 +523,12 @@ export default function UsersPage() {
                 </div>
 
                 <div className="px-5 py-3 border-t border-border/80 bg-muted/20 flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Showing {filteredUsers.length} of {users.length} users</span>
-                  <span className="font-mono text-[11px]">Ferroscope Access Control</span>
+                  <span>
+                    Showing {filteredUsers.length} of {users.length} users
+                  </span>
+                  <span className="font-mono text-[11px]">
+                    Ferroscope Access Control
+                  </span>
                 </div>
               </div>
             )}
@@ -439,13 +536,24 @@ export default function UsersPage() {
         </AnimatePresence>
       </main>
 
-      {/* Edit User Modal */}
-      <EditUserModal
-        isOpen={!!editingUser}
-        user={editingUser}
-        onClose={() => setEditingUser(null)}
+      <UserFormModal
+        isOpen={userModalMode !== null}
+        mode={userModalMode || "create"}
+        user={userToEdit}
+        onClose={() => {
+          setUserModalMode(null);
+          setUserToEdit(null);
+        }}
+        onSuccess={fetchUsers}
         onOptimisticUpdate={handleOptimisticEdit}
         onRevert={handleRevert}
+      />
+
+      <PermissionsModal
+        isOpen={!!permissionsUser}
+        user={permissionsUser}
+        onClose={() => setPermissionsUser(null)}
+        onSuccess={fetchUsers}
       />
 
       {/* Delete User Confirmation Modal */}

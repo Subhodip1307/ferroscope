@@ -55,14 +55,15 @@ export default function DashboardPage() {
     if (nodes.length === 0) return;
 
     try {
-      const cpuPromises = nodes.map(node => api.getLatestCPU(node.id));
-      const ramPromises = nodes.map(node => api.getLatestRAM(node.id));
+      const cpuPromises = nodes.map((node) => api.getLatestCPU(node.id));
+      const ramPromises = nodes.map((node) => api.getLatestRAM(node.id));
 
       const cpuResults = await Promise.all(cpuPromises);
       const ramResultsRaw = await Promise.all(ramPromises);
       const ramResults = ramResultsRaw.filter(Boolean);
 
-      const avgCPU = cpuResults.reduce((acc, curr) => acc + curr.cpu, 0) / cpuResults.length;
+      const avgCPU =
+        cpuResults.reduce((acc, curr) => acc + curr.cpu, 0) / cpuResults.length;
 
       const totalRAMUsed = ramResults.reduce((acc, curr) => {
         if (!curr) return acc;
