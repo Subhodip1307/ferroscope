@@ -51,6 +51,8 @@ pub(super) struct ServiceList {
     pub ssl_exp: Option<OffsetDateTime>,
 }
 
+
+
 #[derive(Debug, Serialize)]
 pub(super) struct SingleServiceStatus {
     pub status: String,
@@ -101,4 +103,16 @@ pub struct NodePermissionView {
 pub struct UserPermissionsResponse {
     pub user_id: i64,
     pub nodes_permissions: Vec<NodePermissionView>,
+}
+#[derive(Serialize)]
+pub struct ServiceInfo {
+    pub id: i64,
+    pub service_name: String,
+}
+
+#[derive(Serialize)]
+pub struct NodeWithServices {
+    pub node_id: i64,
+    pub node_name: String,
+    pub services: Vec<ServiceInfo>,
 }

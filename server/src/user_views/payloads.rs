@@ -21,6 +21,14 @@ pub(super) struct IdQuery {
 }
 
 #[derive(Deserialize)]
+pub(super) struct MutiIdQuery {
+    pub obj_ids: Vec<i64>,
+}
+
+
+
+
+#[derive(Deserialize)]
 pub(super) struct ServiceQuery {
     // use to query the node and a specific service of it.
     pub node: i64,

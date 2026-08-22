@@ -1,6 +1,7 @@
 use super::payloads;
 use super::response as get_payload;
 use crate::state::AppState;
+use crate::user_views::types;
 use axum::{
     Json,
     extract::{Query, State},
@@ -141,6 +142,7 @@ pub(super) async fn __get_all_service_of_node(
     }
     (StatusCode::OK, Json(grouped))
 }
+
 pub(super) async fn __get_all_service_name_of_node(
     State(db_state): State<AppState>,
     Query(params): Query<payloads::IdQuery>,
@@ -157,6 +159,8 @@ pub(super) async fn __get_all_service_name_of_node(
     .await
     .unwrap();
     (StatusCode::OK,Json(rows))
+
+
 }
 
 pub(super) async fn __get_single_service_current_status(
@@ -227,4 +231,60 @@ pub(super) async fn __get_event_type() -> Json<get_payload::__ArrayType<'static>
 pub(super) async fn __get_notification_type() -> Json<get_payload::__ArrayType<'static>> {
     let data = Vec::from(["webhook", "email"]);
     Json(get_payload::__ArrayType { data })
+}
+
+pub(super) async fn __get_nodes_with_services(
+    State(db_state): State<AppState>,
+    Json(nodes_ids): Json<payloads::MutiIdQuery>
+) -> Result<types::ApiResponse<Vec<get_payload::NodeWithServices>>, (StatusCode, types::RespMessage)> {
+    // get services list with nodes input
+    // TODO: check for admin
+    // 1. all nodes (id + name)
+    let nodes: Vec<(i64, String)> =
+        sqlx::query_as("SELECT id, name FROM nodes WHERE id = ANY($1) ORDER BY id")
+        .bind(&nodes_ids.obj_ids)
+            .fetch_all(&db_state.db)
+            .await
+            .map_err(|_| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                   types::RespMessage { res: false, msg: "Database error." },
+                )
+            })?;
+
+    // 2. all services (id, name, which node they belong to)
+    let services: Vec<(i64, String, i64)> =
+        sqlx::query_as("SELECT id, service_name, node_id FROM service_monitor")
+            .fetch_all(&db_state.db)
+            .await
+            .map_err(|_| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                   types::RespMessage { res: false, msg: "Database error." },
+                )
+            })?;
+
+    // 3. build node list, remembering each node's position so we can attach services
+    let mut result: Vec<get_payload::NodeWithServices> = Vec::with_capacity(nodes.len());
+    let mut index_of: HashMap<i64, usize> = HashMap::with_capacity(nodes.len());
+
+    for (node_id, node_name) in nodes {
+        index_of.insert(node_id, result.len());
+        result.push(get_payload::NodeWithServices {
+            node_id,
+            node_name,
+            services: Vec::new(),
+        });
+    }
+
+    for (service_id, service_name, node_id) in services {
+        if let Some(&idx) = index_of.get(&node_id) {
+            result[idx].services.push(get_payload::ServiceInfo {
+                id: service_id,
+                service_name,
+            });
+        }
+    }
+
+    Ok(types::ApiResponse { data: result })
 }

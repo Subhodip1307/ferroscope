@@ -55,7 +55,7 @@ pub(super) async fn __create_user(
         "You don't have permission to delete this user.",
     )
     .await?;
-    sqlx::query("insert into users (username,email,is_admin,password_hash) values ($1,$2,$3)")
+    sqlx::query("insert into users (username,email,is_admin,password_hash) values ($1,$2,$3,$4)")
     .bind(user.username)
     .bind(user.email)
     .bind(user.is_admin)
@@ -95,6 +95,7 @@ pub(super) async fn __get_all_user_list(
 pub(super) async fn __delete_user(
     State(db_state): State<AppState>,
     Extension(user_id): Extension<AuthUser /*using Authuser here just to get the id*/>,
+     Json(user): Json<AuthUser>,
 ) -> ApiResult {
     check_admin(
         &db_state.db,
@@ -103,7 +104,7 @@ pub(super) async fn __delete_user(
     )
     .await?;
     sqlx::query("DELETE FROM users where id = $1")
-        .bind(user_id.user_id)
+        .bind(user.user_id)
         .execute(&db_state.db)
         .await
         .unwrap();
@@ -175,6 +176,8 @@ pub(super) async fn __assign_permission(
     )
     .await?;
 
+    println!("data is {:?}",data);
+
     // flatten everything up front
     let (node_ids,is_full_power):(Vec<i64>,Vec<bool>)=
     data.nodes_permissions.iter().map(|n|{
@@ -198,9 +201,17 @@ pub(super) async fn __assign_permission(
         .collect();
 
     let mut tx = db_state.db.begin().await.unwrap();
+    // removeing all the previous data
+    sqlx::query("DELETE FROM user_node_access WHERE user_id = $1")
+    .bind(data.user_id).execute(&mut *tx).await.unwrap();
+    sqlx::query("DELETE FROM user_node_metric_access WHERE user_id = $1")
+    .bind(data.user_id).execute(&mut *tx).await.unwrap();
+    sqlx::query("DELETE FROM user_node_service_access WHERE user_id = $1")
+    .bind(data.user_id).execute(&mut *tx).await.unwrap();
 
+    // insert query
     sqlx::query(
-        "INSERT INTO user_node_access (user_id, node_id)
+        "INSERT INTO user_node_access (user_id, node_id,is_full_access)
          SELECT $1, * FROM UNNEST($2::bigint[],$3::boolean[])",
     )
     .bind(data.user_id)

@@ -40,6 +40,7 @@ fn view_routers(app_state: AppState) -> Router {
             "/service_current_stat",
             post(read::__get_service_current_status),
         )
+        .route("/nodes_with_services", post(read::__get_nodes_with_services))
         .route_layer(from_fn_with_state(app_state.clone(), user_auth))
         .with_state(app_state.clone())
 }
@@ -67,7 +68,7 @@ fn access_control(app_state: AppState) -> Router {
     use super::user_management;
     Router::new()
         .route("/all_users", get(user_management::__get_all_user_list))
-        .route("/create_user", get(user_management::__create_user))
+        .route("/create_user", post(user_management::__create_user))
         .route("/delete_user", post(user_management::__delete_user))
         .route("/edit_user_details",post(user_management::__edit_user_details))
         .route("/assign_permission",post(user_management::__assign_permission))
