@@ -53,29 +53,36 @@ export function ServiceStatusTabs({ services }: ServiceStatusTabsProps) {
 function ServiceCard({ service }: { service: ServiceStatus }) {
   const isUp = service.status === "up";
 
-  // SSL Expiry formatting: ISO string or null
-  const formatSSL = (ssl?: string | null) => {
-    if (!ssl) return null;
-    const expiryDate = new Date(ssl);
+  const formatSSL = (ssl?: number[] | null) => {
+    if (!ssl || ssl.length < 5) return null;
+
+    const [year, dayOfYear, hour, minute, second] = ssl;
+
+    const expiryDate = new Date(year, 0, 1);
+    expiryDate.setDate(dayOfYear);
+    expiryDate.setHours(hour, minute, second, 0);
+
     if (isNaN(expiryDate.getTime())) return null;
 
     const now = new Date();
-    const diffTime = expiryDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil(
+      (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
 
-    let daysLeftText = "";
     let urgency: "normal" | "warn" | "critical" = "normal";
+    let text = "";
 
-    if (diffDays > 0) {
-      daysLeftText = `(${diffDays} days left)`;
-      if (diffDays < 7) urgency = "critical";
-      else if (diffDays < 30) urgency = "warn";
-    } else if (diffDays === 0) {
-      daysLeftText = `(Expires today)`;
+    if (diffDays > 30) {
+      text = `${diffDays} days left`;
+    } else if (diffDays > 7) {
+      urgency = "warn";
+      text = `${diffDays} days left`;
+    } else if (diffDays >= 0) {
       urgency = "critical";
+      text = `${diffDays} days left`;
     } else {
-      daysLeftText = `(Expired ${Math.abs(diffDays)} days ago)`;
       urgency = "critical";
+      text = `Expired ${Math.abs(diffDays)} days ago`;
     }
 
     return {
@@ -84,8 +91,7 @@ function ServiceCard({ service }: { service: ServiceStatus }) {
         month: "short",
         day: "numeric",
       }),
-      daysLeft: diffDays,
-      text: daysLeftText,
+      text,
       urgency,
     };
   };
@@ -96,7 +102,9 @@ function ServiceCard({ service }: { service: ServiceStatus }) {
     <div className="group relative flex flex-col gap-3 p-5 rounded-2xl border bg-card hover:shadow-md transition-all duration-300">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className={`p-2 rounded-full ${isUp ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+          <div
+            className={`p-2 rounded-full ${isUp ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}
+          >
             {isUp ? (
               <CheckCircle2 className="w-5 h-5" />
             ) : (
@@ -104,14 +112,17 @@ function ServiceCard({ service }: { service: ServiceStatus }) {
             )}
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-base truncate max-w-[160px]" title={service.service_name}>
+            <span
+              className="font-bold text-base truncate max-w-[160px]"
+              title={service.service_name}
+            >
               {service.service_name}
             </span>
           </div>
         </div>
         <Badge
           variant={isUp ? "default" : "destructive"}
-          className={`text-[10px] uppercase font-black tracking-widest px-2.5 py-0.5 rounded-full ${isUp ? 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20' : ''}`}
+          className={`text-[10px] uppercase font-black tracking-widest px-2.5 py-0.5 rounded-full ${isUp ? "bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20" : ""}`}
         >
           {service.status}
         </Badge>
@@ -124,22 +135,32 @@ function ServiceCard({ service }: { service: ServiceStatus }) {
       )}
 
       {sslInfo && (
-        <div className={`flex flex-col gap-1 mt-auto pt-3 border-t border-muted/30`}>
+        <div
+          className={`flex flex-col gap-1 mt-auto pt-3 border-t border-muted/30`}
+        >
           <div className="flex items-center gap-2">
-            <ShieldAlert className={`w-4 h-4 ${
-              sslInfo.urgency === 'critical' ? 'text-red-500' : 
-              sslInfo.urgency === 'warn' ? 'text-amber-500' : 
-              'text-blue-500'
-            }`} />
+            <ShieldAlert
+              className={`w-4 h-4 ${
+                sslInfo.urgency === "critical"
+                  ? "text-red-500"
+                  : sslInfo.urgency === "warn"
+                    ? "text-amber-500"
+                    : "text-blue-500"
+              }`}
+            />
             <span className="text-sm font-semibold tracking-tight">
               SSL Expires: {sslInfo.date}
             </span>
           </div>
-          <span className={`text-xs ml-6 font-bold ${
-            sslInfo.urgency === 'critical' ? 'text-red-500 animate-pulse' : 
-            sslInfo.urgency === 'warn' ? 'text-amber-500' : 
-            'text-muted-foreground'
-          }`}>
+          <span
+            className={`text-xs ml-6 font-bold ${
+              sslInfo.urgency === "critical"
+                ? "text-red-500 animate-pulse"
+                : sslInfo.urgency === "warn"
+                  ? "text-amber-500"
+                  : "text-muted-foreground"
+            }`}
+          >
             {sslInfo.text}
           </span>
         </div>

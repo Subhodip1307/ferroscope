@@ -14,19 +14,26 @@ import type {
   ChangePasswordCredentials,
   Rule,
   DiskData,
+  UserAccessControlItem,
+  CreateUserPayload,
+  EditUserPayload,
+  AssignPermissionPayload,
+  UserPermissionsResponse,
+  NodeWithServices,
 } from "@/types";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const getBaseUrl = () => {
-  if (typeof window !== 'undefined' && (window as any).__ENV__?.BASE_URL) {
+  if (typeof window !== "undefined" && (window as any).__ENV__?.BASE_URL) {
     return (window as any).__ENV__.BASE_URL;
   }
-  return process.env.NEXT_PUBLIC_BASE_URL || '';
+  return process.env.NEXT_PUBLIC_BASE_URL || "";
 };
 
 const getApiUrl = () => `${getBaseUrl()}/view`;
 const getAuthUrl = () => `${getBaseUrl()}/auth`;
 const getWriteUrl = () => `${getBaseUrl()}/write`;
+const getAccessControlUrl = () => `${getBaseUrl()}/access-control`;
 
 const getHeaders = () => {
   const token =
@@ -73,10 +80,13 @@ export const api = {
   },
 
   async getLatestCPU(nodeId: number): Promise<CPUData> {
-    const response = await fetch(`${getApiUrl()}/get_latest_cpu?node=${nodeId}`, {
-      method: "POST",
-      headers: getHeaders(),
-    });
+    const response = await fetch(
+      `${getApiUrl()}/get_latest_cpu?node=${nodeId}`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+      },
+    );
 
     const data = await handleResponse<CPUStatRaw>(response, {
       value: 0,
@@ -90,10 +100,13 @@ export const api = {
   },
 
   async getLatestRAM(nodeId: number): Promise<RAMData | null> {
-    const response = await fetch(`${getApiUrl()}/get_latest_ram?node=${nodeId}`, {
-      method: "POST",
-      headers: getHeaders(),
-    });
+    const response = await fetch(
+      `${getApiUrl()}/get_latest_ram?node=${nodeId}`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+      },
+    );
     return handleResponse<RAMData>(response);
   },
 
@@ -136,10 +149,13 @@ export const api = {
   },
 
   async getNodeServices(nodeId: number): Promise<Service[]> {
-    const response = await fetch(`${getApiUrl()}/node_services?node=${nodeId}`, {
-      method: "POST",
-      headers: getHeaders(),
-    });
+    const response = await fetch(
+      `${getApiUrl()}/node_services?node=${nodeId}`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+      },
+    );
     return (await handleResponse<Service[]>(response, [])) ?? [];
   },
 
@@ -186,10 +202,13 @@ export const api = {
   },
 
   async getNodeInfo(nodeId: number): Promise<NodeInfo | null> {
-    const response = await fetch(`${getApiUrl()}/get_node_info?node=${nodeId}`, {
-      method: "POST",
-      headers: getHeaders(),
-    });
+    const response = await fetch(
+      `${getApiUrl()}/get_node_info?node=${nodeId}`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+      },
+    );
     return handleResponse<NodeInfo>(response);
   },
 
@@ -201,7 +220,9 @@ export const api = {
     return handleResponse<UserDetails>(response);
   },
 
-  async changePassword(credentials: ChangePasswordCredentials): Promise<boolean> {
+  async changePassword(
+    credentials: ChangePasswordCredentials,
+  ): Promise<boolean> {
     const response = await fetch(`${getAuthUrl()}/change_password`, {
       method: "POST",
       headers: getHeaders(),
@@ -259,5 +280,107 @@ export const api = {
       body: JSON.stringify(rule),
     });
     return response.status === 201;
+  },
+
+  // ─── User Access Control ───────────────────────────────────────────────────
+  async getAllUsers(): Promise<UserAccessControlItem[]> {
+    const response = await fetch(`${getAccessControlUrl()}/all_users`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    const result = await handleResponse<{ data: UserAccessControlItem[] }>(
+      response,
+      { data: [] },
+    );
+    return result?.data ?? [];
+  },
+
+  async createUser(payload: CreateUserPayload): Promise<boolean> {
+    const response = await fetch(`${getAccessControlUrl()}/create_user`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    if (response.status === 409) {
+      throw Object.assign(new Error("Username already exists"), {
+        status: 409,
+      });
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw Object.assign(
+        new Error(errorData.msg || `API error: ${response.status}`),
+        { status: response.status },
+      );
+    }
+
+    return response.status === 201;
+  },
+
+  async deleteUser(userId: number): Promise<boolean> {
+    const response = await fetch(`${getAccessControlUrl()}/delete_user`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ user_id: userId }),
+    });
+    // Any 200 OK is success; any non-200 is failure.
+    return response.ok && response.status === 200;
+  },
+
+  async editUserDetails(payload: EditUserPayload): Promise<boolean> {
+    const response = await fetch(`${getAccessControlUrl()}/edit_user_details`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    // Rely strictly on HTTP 201 Created status due to server-side bug with 'res' flag
+    return response.status === 201;
+  },
+
+  //permission
+
+  async assignPermissions(payload: AssignPermissionPayload): Promise<boolean> {
+    const response = await fetch(`${getAccessControlUrl()}/assign_permission`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return response.status === 201;
+  },
+
+  async getUserPermissions(
+    userId: number,
+  ): Promise<UserPermissionsResponse | null> {
+    const response = await fetch(
+      `${getAccessControlUrl()}/users/${userId}/permissions`,
+      {
+        method: "GET",
+        headers: getHeaders(),
+      },
+    );
+    const result = await handleResponse<{ data: UserPermissionsResponse }>(
+      response,
+    );
+    return result?.data ?? null;
+  },
+
+  async getNodesWithServices(nodeIds: number[]): Promise<NodeWithServices[]> {
+    const response = await fetch(
+      `${getApiUrl()}/nodes_with_services`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ obj_ids: nodeIds }),
+      },
+    );
+    const result = await handleResponse<{ data: NodeWithServices[] }>(
+      response,
+      {
+        data: [],
+      },
+    );
+    return result?.data ?? [];
   },
 };
