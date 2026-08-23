@@ -8,5 +8,6 @@ mod urls;
 mod user_management;
 mod write;
 use crate::middleware::user_auth as middleware;
+use crate::middleware::admin_auth::admin_auth as admin_middleware;
 pub use response::{LatestCpu, LatestRam, NodeDiskIoStats};
 pub use urls::base_routers;

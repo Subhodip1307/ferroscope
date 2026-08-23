@@ -5,6 +5,7 @@ use axum::{
     Router,
     routing::{get, post},
 };
+use super::user_management;
 
 pub fn auth_routers(app_state: AppState) -> Router {
     use super::auth;
@@ -64,24 +65,11 @@ fn write_routers(app_state: AppState) -> Router {
         .with_state(app_state)
 }
 
-fn access_control(app_state: AppState) -> Router {
-    use super::user_management;
-    Router::new()
-        .route("/all_users", get(user_management::__get_all_user_list))
-        .route("/create_user", post(user_management::__create_user))
-        .route("/delete_user", post(user_management::__delete_user))
-        .route("/edit_user_details",post(user_management::__edit_user_details))
-        .route("/assign_permission",post(user_management::__assign_permission))
-        .route("/users/{user_id}/permissions", get(user_management::__get_user_permissions))
-        .route_layer(from_fn_with_state(app_state.clone(), user_auth))
-        .with_state(app_state)
-}
-
 pub fn base_routers(app_state: AppState) -> Router {
     Router::new()
         .nest("/view", view_routers(app_state.clone()))
         .nest("/auth", auth_routers(app_state.clone()))
         .nest("/stream", streaming_routers(app_state.clone()))
         .nest("/write", write_routers(app_state.clone()))
-        .nest("/access-control", access_control(app_state))
+        .nest("/access-control", user_management::access_control(app_state))
 }

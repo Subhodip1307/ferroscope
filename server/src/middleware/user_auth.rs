@@ -7,7 +7,6 @@ use axum::{
     middleware::Next,
     response::Response,
 };
-use sqlx::Row;
 
 pub async fn user_auth(
     State(db_state): State<AppState>,
@@ -23,8 +22,7 @@ pub async fn user_auth(
         let out_put: (bool, i64) = match db_state.cache.get(&cache_key) {
             Some(value) => (true, value),
             None => {
-                // TODO: change ::query with query_scalar
-                let fetch_data = sqlx::query("SELECT user_id FROM auth_tokens where token=$1")
+                let fetch_data = sqlx::query_scalar::<_,i64>("SELECT user_id FROM auth_tokens where token=$1")
                     .persistent(true)
                     .bind(auth_str)
                     .fetch_optional(&db_state.db)
@@ -32,10 +30,9 @@ pub async fn user_auth(
                     .unwrap();
                 let out_put: (bool, i64) = match fetch_data {
                     Some(value) => {
-                        let user_pk = value.get("user_id");
                         // setting the cache
-                        db_state.cache.insert(cache_key, user_pk);
-                        (true, user_pk)
+                        db_state.cache.insert(cache_key, value);
+                        (true, value)
                     }
                     None => (false, 0),
                 };

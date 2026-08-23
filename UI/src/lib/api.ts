@@ -284,7 +284,7 @@ export const api = {
 
   // ─── User Access Control ───────────────────────────────────────────────────
   async getAllUsers(): Promise<UserAccessControlItem[]> {
-    const response = await fetch(`${getAccessControlUrl()}/all_users`, {
+    const response = await fetch(`${getAccessControlUrl()}/views/all_users`, {
       method: "GET",
       headers: getHeaders(),
     });
@@ -296,7 +296,7 @@ export const api = {
   },
 
   async createUser(payload: CreateUserPayload): Promise<boolean> {
-    const response = await fetch(`${getAccessControlUrl()}/create_user`, {
+    const response = await fetch(`${getAccessControlUrl()}/create/create_user`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(payload),
@@ -320,7 +320,7 @@ export const api = {
   },
 
   async deleteUser(userId: number): Promise<boolean> {
-    const response = await fetch(`${getAccessControlUrl()}/delete_user`, {
+    const response = await fetch(`${getAccessControlUrl()}/create/delete_user`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify({ user_id: userId }),
@@ -330,7 +330,7 @@ export const api = {
   },
 
   async editUserDetails(payload: EditUserPayload): Promise<boolean> {
-    const response = await fetch(`${getAccessControlUrl()}/edit_user_details`, {
+    const response = await fetch(`${getAccessControlUrl()}/create/edit_user_details`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(payload),
@@ -342,7 +342,7 @@ export const api = {
   //permission
 
   async assignPermissions(payload: AssignPermissionPayload): Promise<boolean> {
-    const response = await fetch(`${getAccessControlUrl()}/assign_permission`, {
+    const response = await fetch(`${getAccessControlUrl()}/create/assign_permission`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(payload),
@@ -354,7 +354,7 @@ export const api = {
     userId: number,
   ): Promise<UserPermissionsResponse | null> {
     const response = await fetch(
-      `${getAccessControlUrl()}/users/${userId}/permissions`,
+      `${getAccessControlUrl()}/views/users/${userId}/permissions`,
       {
         method: "GET",
         headers: getHeaders(),
