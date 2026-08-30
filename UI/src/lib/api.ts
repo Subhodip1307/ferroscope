@@ -241,18 +241,24 @@ export const api = {
   },
 
   getCPUStreamUrl(nodeId: number): string {
+    const token =
+    typeof window !== "undefined" ? localStorage.getItem("ferro_token") : "";
     const streamBase = getApiUrl()?.replace("/view", "/stream") || "";
-    return `${streamBase}/cpu?node=${nodeId}`;
+    return `${streamBase}/cpu?node=${nodeId}&token=${token}`;
   },
 
   getRAMStreamUrl(nodeId: number): string {
+    const token =
+    typeof window !== "undefined" ? localStorage.getItem("ferro_token") : "";
     const streamBase = getApiUrl()?.replace("/view", "/stream") || "";
-    return `${streamBase}/ram?node=${nodeId}`;
+    return `${streamBase}/ram?node=${nodeId}&token=${token}`;
   },
 
   getDiskStreamUrl(nodeId: number): string {
+    const token =
+    typeof window !== "undefined" ? localStorage.getItem("ferro_token") : "";
     const streamBase = getApiUrl()?.replace("/view", "/stream") || "";
-    return `${streamBase}/disk?node=${nodeId}`;
+    return `${streamBase}/disk?node=${nodeId}&token=${token}`;
   },
 
   async createNode(name: string): Promise<{ token: string } | null> {

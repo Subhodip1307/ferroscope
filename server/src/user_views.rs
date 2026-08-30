@@ -9,5 +9,7 @@ mod user_management;
 mod write;
 use crate::middleware::user_auth as middleware;
 use crate::middleware::admin_auth::admin_auth as admin_middleware;
+use crate::middleware::stream_auth::user_auth_sse as sse_middleware;
 pub use response::{LatestCpu, LatestRam, NodeDiskIoStats};
 pub use urls::base_routers;
+mod auth_permission;

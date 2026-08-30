@@ -1,10 +1,7 @@
 use super::super::admin_middleware;
 use crate::state::AppState;
 use axum::middleware::from_fn_with_state;
-use axum::{
-    Router,
-    routing::{get, post},
-};
+use axum::{Router,routing::{get, post}};
 use super::create;
 use super::views;
 
@@ -27,6 +24,6 @@ fn create_routes(app_state: AppState)-> Router {
 fn view_routes(app_state: AppState)-> Router {
     Router::new()
     .route("/all_users", get(views::__get_all_user_list))
-     .route("/users/{user_id}/permissions", get(views::__get_user_permissions))
+    .route("/users/{user_id}/permissions", get(views::__get_user_permissions))
     .with_state(app_state)
 }

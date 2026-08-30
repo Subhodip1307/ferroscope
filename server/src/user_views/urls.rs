@@ -1,4 +1,5 @@
 use super::middleware::user_auth;
+use super::sse_middleware;
 use crate::state::AppState;
 use axum::middleware::from_fn_with_state;
 use axum::{
@@ -52,6 +53,7 @@ fn streaming_routers(app_state: AppState) -> Router {
         .route("/cpu", get(streaming::stream_cpu_metrics))
         .route("/ram", get(streaming::stream_ram_metrics))
         .route("/disk", get(streaming::stream_disk_metrix))
+        .route_layer(from_fn_with_state(app_state.clone(), sse_middleware))
         .with_state(app_state)
 }
 

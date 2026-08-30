@@ -1,6 +1,7 @@
 use ferroscope_server::global::structure::{Condition, NotificationChannel};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
+use super::types::Metrixs;
 
 #[derive(Deserialize)]
 pub(super) struct Login {
@@ -91,21 +92,7 @@ pub struct UserDetails {
     pub password: String,
 }
 
-#[derive(Debug, Deserialize)]
-pub enum Metrixs {
-    RAM,
-    CPU,
-    DISK,
-}
-impl std::fmt::Display for Metrixs {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Metrixs::RAM => write!(f, "RAM"),
-            Metrixs::CPU => write!(f, "CPU"),
-            Metrixs::DISK => write!(f, "DISK"),
-        }
-    }
-}
+
 
 #[derive(Deserialize,Debug)]
 pub struct UserPermissions{

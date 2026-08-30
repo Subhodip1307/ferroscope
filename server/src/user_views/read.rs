@@ -4,17 +4,31 @@ use crate::state::AppState;
 use crate::user_views::types;
 use axum::{
     Json,
-    extract::{Query, State},
+    extract::{Query, State,Extension},
     http::StatusCode,
 };
 use chrono::{DateTime, Utc};
 use sqlx::Row;
 use std::collections::HashMap;
+use super::auth_permission;
+use super::types::{AuthUser,PermissionData,Metrixs};
 
 pub(super) async fn __get_node_list(
     State(db_state): State<AppState>,
+    Extension(auth_user): Extension<AuthUser>,
 ) -> Result<(StatusCode, Json<Vec<get_payload::NodesList>>), StatusCode> {
-    let rows: Vec<get_payload::NodesList> = sqlx::query_as("SELECT id,name FROM nodes")
+    let check_permission=auth_permission::get_allowed_nodes_list(&db_state.db,auth_user.user_id).await;
+
+    let (is_admin,data) = match check_permission {
+        PermissionData::IsAdmin=>(true,vec![]),
+        PermissionData::Data(d)=>(false,d)
+    };
+
+    println!("is admin {} and all data {:?}",is_admin,data);
+
+    let rows: Vec<get_payload::NodesList> = sqlx::query_as("SELECT id,name FROM nodes WHERE $1 = true OR  id = ANY($2) ")
+        .bind(is_admin)
+        .bind(data)
         .fetch_all(&db_state.db)
         .await
         .unwrap();
@@ -41,12 +55,18 @@ pub(super) async fn __get_nodeinfo(
 
 pub(super) async fn __get_latest_cpu(
     State(db_state): State<AppState>,
+    Extension(auth_user): Extension<AuthUser>,
     Query(params): Query<payloads::IdQuery>,
 ) -> Result<(StatusCode, Json<get_payload::LatestCpu>), StatusCode> {
+    let check_permission=auth_permission::check_node_metrix_permission(
+        &db_state.db,params.node,auth_user.user_id,Metrixs::CPU
+    ).await;
+
     let row = sqlx::query(
-        "SELECT value,date_time FROM cpu_stats where node_id = $1 ORDER BY date_time DESC LIMIT 1",
+        "SELECT value,date_time FROM cpu_stats where $2 = true AND node_id = $1 ORDER BY date_time DESC LIMIT 1",
     )
     .bind(params.node)
+    .bind(check_permission)
     .fetch_optional(&db_state.db)
     .await
     .unwrap();
@@ -64,12 +84,18 @@ pub(super) async fn __get_latest_cpu(
 
 pub(super) async fn __get_latest_ram(
     State(db_state): State<AppState>,
+    Extension(auth_user): Extension<AuthUser>,
     Query(params): Query<payloads::IdQuery>,
 ) -> Result<(StatusCode, Json<get_payload::LatestRam>), StatusCode> {
+    let check_permission=auth_permission::check_node_metrix_permission(
+        &db_state.db,params.node,auth_user.user_id,Metrixs::CPU
+    ).await;
+
     let value = sqlx::query(
-        "SELECT free,total,date_time FROM memory_metrics where node_id = $1 ORDER BY date_time DESC LIMIT 1",
+        "SELECT free,total,date_time FROM memory_metrics WHERE $2 = true AND node_id = $1 ORDER BY date_time DESC LIMIT 1",
     )
     .bind(params.node)
+    .bind(check_permission)
     .fetch_optional(&db_state.db)
     .await
     .unwrap();
