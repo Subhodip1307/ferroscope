@@ -30,6 +30,7 @@ pub(super) async fn __remove_node(
     State(db_state): State<AppState>,
     Json(params): Json<payloads::IdQuery>,
 ) -> StatusCode {
+    println!("runing");
     let _ = sqlx::query("delete from nodes where id =$1")
         .bind(params.node)
         .execute(&db_state.db)

@@ -1,5 +1,6 @@
 use super::middleware::user_auth;
 use super::sse_middleware;
+use super::admin_middleware;
 use crate::state::AppState;
 use axum::middleware::from_fn_with_state;
 use axum::{
@@ -33,11 +34,8 @@ fn view_routers(app_state: AppState) -> Router {
         .route("/cpu_stat", post(read::__get_latest_cpu_hisotry))
         .route("/ram_stat", post(read::__get_latest_ram_hisotry))
         .route("/node_services", post(read::__get_all_service_of_node))
-        .route("/get_node_services_name", post(read::__get_all_service_name_of_node))
-        .route(
-            "/single_service_current_stat",
-            post(read::__get_single_service_current_status),
-        )
+        // .route("/get_node_services_name", post(read::__get_all_service_name_of_node))
+        .route("/single_service_current_stat",post(read::__get_single_service_current_status))
         .route(
             "/service_current_stat",
             post(read::__get_service_current_status),
@@ -63,7 +61,7 @@ fn write_routers(app_state: AppState) -> Router {
         .route("/create_nodes", post(write::__create_node))
         .route("/remove_nodes", post(write::__remove_node))
         .route("/create_rules", post(write::__create_notification_rules))
-        .route_layer(from_fn_with_state(app_state.clone(), user_auth))
+        .route_layer(from_fn_with_state(app_state.clone(), admin_middleware))
         .with_state(app_state)
 }
 

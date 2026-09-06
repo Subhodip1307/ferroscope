@@ -34,8 +34,9 @@ form_urlencoded = "1.2.2"
 disable_auth=[]
 
 [[bin]]
-name="ferroscope-server"
+name="server"
 path="src/main.rs"
+
 
 [[bin]]
 name="fero"

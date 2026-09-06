@@ -35,12 +35,14 @@ pub async fn admin_auth(
                         db_state.cache.insert(cache_key, value);
                         (true, value)
                     }
-                    None => (false, 0),
+                    None =>{db_state.cache.insert(cache_key, 0); (false, 0)},
                 };
+                // println!("the output is {:?} and the token is {auth_str}",out_put);
                 out_put
             }
         };
 
+        // println!("the output is {:?}",out_put);
         if !out_put.0 {
             return Err(StatusCode::FORBIDDEN);
         }
