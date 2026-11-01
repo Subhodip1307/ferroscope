@@ -8,6 +8,7 @@ mod process;
 use tokio::sync::mpsc;
 mod app;
 mod middleware;
+
 #[tokio::main]
 async fn main() {
     println!("Runing Version : {}", env!("CARGO_PKG_VERSION"));
@@ -15,11 +16,15 @@ async fn main() {
     let app_state = AppState::new(tx).await;
     let pg_pool = app_state.db.clone();
 
-    sqlx::migrate!("./migrations").run(&pg_pool).await.unwrap();
+    // sqlx::migrate!("./migrations").run(&pg_pool).await.unwrap();
     let app = app::create_axum_app(app_state.clone());
     let host = env::var("HOST").unwrap_or("0.0.0.0:8000".to_string());
     bg_services::node_status_check(app_state).await;
-    bg_services::notification_service(pg_pool, rx).await;
+    bg_services::notification_service(pg_pool.clone(), rx).await;
+    if let Ok(days) = env::var("RETENTION_DAYS") {
+        let days: u16 = days.trim().parse().unwrap();
+        bg_services::clean_data(pg_pool, days).await;
+    }
     let listener = tokio::net::TcpListener::bind(&host).await.unwrap();
     println!("runing on {}", host);
     axum::serve(listener, app).await.unwrap();

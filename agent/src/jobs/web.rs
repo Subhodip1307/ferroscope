@@ -1,7 +1,6 @@
 // Web Executor
 use super::config_reader::load_config;
-use super::structures::BaseFormat;
-use super::structures::Web;
+use super::structures::{Web,BaseFormat,Recovery};
 use crate::Payload;
 use crate::set_up::BaseConFig;
 use arc_swap::ArcSwap;
@@ -32,6 +31,7 @@ pub(super) async fn web_runner(
     api_queue: tokio::sync::mpsc::Sender<Payload>,
     config: Arc<BaseConFig>,
     all_files: Arc<ArcSwap<Vec<String>>>,
+    fallback_sender: tokio::sync::mpsc::Sender<Recovery>,
 ) {
     let baseapi = config.get_service_url();
     let _client = Client::builder()
@@ -73,13 +73,22 @@ pub(super) async fn web_runner(
                 category: "Web".to_string(),
                 ssl_exp: ssl_datetime,
             },
-            false => BaseFormat {
+            false => {
+                if let (Some(file),Some(hash))=(value.recovery_file_path,value.recover_file_256_hash){
+                    fallback_sender.send(Recovery{
+                    file:file,hash:hash
+                    }).await.unwrap();
+                }
+                
+                BaseFormat {
                 service_name: value.name,
                 status: "down".to_string(),
                 error_msg: format!("The status code is {}", code),
                 category: "Web".to_string(),
                 ssl_exp: ssl_datetime,
-            },
+            }
+        }
+            ,
         };
         api_queue
             .send(Payload {

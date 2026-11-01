@@ -17,7 +17,6 @@ pub async fn agent_auth_middleware(
             Ok(v) => v,
             Err(_) => return Err(StatusCode::UNAUTHORIZED),
         };
-
         let cache_key = format!("user_auth_{auth_str}");
         let out_put: (bool, i64) = match db_state.cache.get(&cache_key) {
             Some(value) => (true, value),
@@ -28,12 +27,13 @@ pub async fn agent_auth_middleware(
                     .await
                     .unwrap();
                 #[cfg(not(feature = "disable_auth"))]
-                let fetch_data = sqlx::query_scalar::<_,i64>("SELECT id FROM nodes where token=$1")
-                    .persistent(true)
-                    .bind(auth_str)
-                    .fetch_optional(&db_state.db)
-                    .await
-                    .unwrap();
+                let fetch_data =
+                    sqlx::query_scalar::<_, i64>("SELECT id FROM nodes where token=$1")
+                        .persistent(true)
+                        .bind(auth_str)
+                        .fetch_optional(&db_state.db)
+                        .await
+                        .unwrap();
 
                 let out_put: (bool, i64) = match fetch_data {
                     Some(value) => {

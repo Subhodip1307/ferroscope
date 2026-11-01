@@ -1,15 +1,15 @@
+use super::auth_permission;
 use super::payloads;
+use super::types::{AuthUser, Metrixs};
 use crate::state::{AppState, StreamPayLoad};
 use axum::{
-    extract::{Query,State,Extension},
+    extract::{Extension, Query, State},
     http::StatusCode,
     response::sse::{Event, KeepAlive, Sse},
 };
 use futures_util::{Stream, StreamExt};
 use std::convert::Infallible;
 use tokio_stream::wrappers::WatchStream;
-use super::auth_permission;
-use super::types::{AuthUser,Metrixs};
 
 //TODO: add auth
 pub async fn stream_cpu_metrics(
@@ -17,13 +17,16 @@ pub async fn stream_cpu_metrics(
     Extension(auth_user): Extension<AuthUser>,
     Query(params): Query<payloads::IdQuery>,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, StatusCode> {
-    let check_permission=auth_permission::check_node_metrix_permission(
-        &state.db,params.node,auth_user.user_id,Metrixs::CPU
-    ).await;
+    let check_permission = auth_permission::check_node_metrix_permission(
+        &state.db,
+        params.node,
+        auth_user.user_id,
+        Metrixs::CPU,
+    )
+    .await;
     if !check_permission {
-        return Err(StatusCode::FORBIDDEN)
+        return Err(StatusCode::FORBIDDEN);
     }
-
 
     let node_recever = match state
         .stream_data
@@ -50,14 +53,16 @@ pub async fn stream_ram_metrics(
     Extension(auth_user): Extension<AuthUser>,
     Query(params): Query<payloads::IdQuery>,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, StatusCode> {
-
-    let check_permission=auth_permission::check_node_metrix_permission(
-        &state.db,params.node,auth_user.user_id,Metrixs::RAM
-    ).await;
+    let check_permission = auth_permission::check_node_metrix_permission(
+        &state.db,
+        params.node,
+        auth_user.user_id,
+        Metrixs::RAM,
+    )
+    .await;
     if !check_permission {
-        return Err(StatusCode::FORBIDDEN)
+        return Err(StatusCode::FORBIDDEN);
     }
-
 
     let node_recever = match state
         .stream_data
@@ -83,11 +88,15 @@ pub async fn stream_disk_metrix(
     Extension(auth_user): Extension<AuthUser>,
     Query(params): Query<payloads::IdQuery>,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, StatusCode> {
-    let check_permission=auth_permission::check_node_metrix_permission(
-        &state.db,params.node,auth_user.user_id,Metrixs::DISK
-    ).await;
+    let check_permission = auth_permission::check_node_metrix_permission(
+        &state.db,
+        params.node,
+        auth_user.user_id,
+        Metrixs::DISK,
+    )
+    .await;
     if !check_permission {
-        return Err(StatusCode::FORBIDDEN)
+        return Err(StatusCode::FORBIDDEN);
     }
 
     let node_recever = match state

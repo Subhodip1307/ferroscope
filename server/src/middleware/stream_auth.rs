@@ -30,14 +30,13 @@ pub async fn user_auth_sse(
     let out_put: (bool, i64) = match db_state.cache.get(&cache_key) {
         Some(value) => (true, value),
         None => {
-            let fetch_data = sqlx::query_scalar::<_, i64>(
-                "SELECT user_id FROM auth_tokens WHERE token = $1",
-            )
-            .persistent(true)
-            .bind(&token)
-            .fetch_optional(&db_state.db)
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?; // don't panic on DB errors
+            let fetch_data =
+                sqlx::query_scalar::<_, i64>("SELECT user_id FROM auth_tokens WHERE token = $1")
+                    .persistent(true)
+                    .bind(&token)
+                    .fetch_optional(&db_state.db)
+                    .await
+                    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?; // don't panic on DB errors
 
             match fetch_data {
                 Some(value) => {

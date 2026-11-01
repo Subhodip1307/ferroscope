@@ -1,13 +1,13 @@
+use super::admin_middleware;
 use super::middleware::user_auth;
 use super::sse_middleware;
-use super::admin_middleware;
+use super::user_management;
 use crate::state::AppState;
 use axum::middleware::from_fn_with_state;
 use axum::{
     Router,
     routing::{get, post},
 };
-use super::user_management;
 
 pub fn auth_routers(app_state: AppState) -> Router {
     use super::auth;
@@ -35,12 +35,18 @@ fn view_routers(app_state: AppState) -> Router {
         .route("/ram_stat", post(read::__get_latest_ram_hisotry))
         .route("/node_services", post(read::__get_all_service_of_node))
         // .route("/get_node_services_name", post(read::__get_all_service_name_of_node))
-        .route("/single_service_current_stat",post(read::__get_single_service_current_status))
+        .route(
+            "/single_service_current_stat",
+            post(read::__get_single_service_current_status),
+        )
         .route(
             "/service_current_stat",
             post(read::__get_service_current_status),
         )
-        .route("/nodes_with_services", post(read::__get_nodes_with_services))
+        .route(
+            "/nodes_with_services",
+            post(read::__get_nodes_with_services),
+        )
         .route_layer(from_fn_with_state(app_state.clone(), user_auth))
         .with_state(app_state.clone())
 }
@@ -71,5 +77,8 @@ pub fn base_routers(app_state: AppState) -> Router {
         .nest("/auth", auth_routers(app_state.clone()))
         .nest("/stream", streaming_routers(app_state.clone()))
         .nest("/write", write_routers(app_state.clone()))
-        .nest("/access-control", user_management::access_control(app_state))
+        .nest(
+            "/access-control",
+            user_management::access_control(app_state),
+        )
 }

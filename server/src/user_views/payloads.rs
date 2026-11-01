@@ -1,7 +1,7 @@
+use super::types::Metrixs;
 use ferroscope_server::global::structure::{Condition, NotificationChannel};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
-use super::types::Metrixs;
 
 #[derive(Deserialize)]
 pub(super) struct Login {
@@ -25,9 +25,6 @@ pub(super) struct IdQuery {
 pub(super) struct MutiIdQuery {
     pub obj_ids: Vec<i64>,
 }
-
-
-
 
 #[derive(Deserialize)]
 pub(super) struct ServiceQuery {
@@ -92,18 +89,17 @@ pub struct UserDetails {
     pub password: String,
 }
 
-
-
-#[derive(Deserialize,Debug)]
-pub struct UserPermissions{
-    pub node_id:i64,
-    pub metrix:Option<Vec<Metrixs>>, //Allowed Metrixs 
-    pub services:Option<Vec<i64>>, //Services id list
-    pub full_permission:Option<bool>
+#[derive(Deserialize, Debug)]
+pub struct UserPermissions {
+    pub node_id: i64,
+    pub metrix: Option<Vec<Metrixs>>, //Allowed Metrixs
+    pub services: Option<Vec<i64>>,   //Services id list
+    pub full_permission: Option<bool>,
 }
 
-#[derive(Deserialize,Debug)]
-pub struct AssignPermission{//it's a payload
-    pub user_id:i64,
-    pub nodes_permissions:Vec<UserPermissions>
+#[derive(Deserialize, Debug)]
+pub struct AssignPermission {
+    //it's a payload
+    pub user_id: i64,
+    pub nodes_permissions: Vec<UserPermissions>,
 }

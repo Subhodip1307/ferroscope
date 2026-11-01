@@ -21,6 +21,8 @@ pub(super) struct Host {
     pub name: String,
     host: String,
     port: u16,
+   pub recovery_file_path:Option<String>,
+    pub recover_file_256_hash:Option<String>,
 }
 impl Host {
     pub fn addr(&self) -> String {
@@ -38,6 +40,8 @@ pub(super) struct Web {
     pub name: String,
     url: String,
     status_code: u16,
+    pub recovery_file_path:Option<String>,
+    pub recover_file_256_hash:Option<String>,
 }
 impl Web {
     pub fn get_url(&self) -> &str {
@@ -46,4 +50,9 @@ impl Web {
     pub fn match_status(&self, code: u16) -> bool {
         self.status_code == code
     }
+}
+
+pub (super) struct Recovery{
+   pub file:String,
+    pub hash:String
 }

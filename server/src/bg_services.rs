@@ -1,5 +1,7 @@
+mod data_cleaning;
 mod notification_service;
 mod status_check;
+pub use data_cleaning::clean_data;
 pub use notification_service::notification_service;
 pub use status_check::node_status_check;
 mod notification_medium;

@@ -22,8 +22,7 @@ pub async fn admin_auth(
         let out_put: (bool, i64) = match db_state.cache.get(&cache_key) {
             Some(value) => (true, value),
             None => {
-                let fetch_data = 
-    sqlx::query_scalar::<_,i64>("SELECT t.user_id FROM auth_tokens t  where t.token=$1 AND EXISTS (SELECT 1 FROM users u where u.id = t.user_id AND u.is_admin = true )  ")
+                let fetch_data = sqlx::query_scalar::<_,i64>("SELECT t.user_id FROM auth_tokens t  where t.token=$1 AND EXISTS (SELECT 1 FROM users u where u.id = t.user_id AND u.is_admin = true )  ")
                     .persistent(true)
                     .bind(auth_str)
                     .fetch_optional(&db_state.db)
@@ -35,7 +34,10 @@ pub async fn admin_auth(
                         db_state.cache.insert(cache_key, value);
                         (true, value)
                     }
-                    None =>{db_state.cache.insert(cache_key, 0); (false, 0)},
+                    None => {
+                        db_state.cache.insert(cache_key, 0);
+                        (false, 0)
+                    }
                 };
                 // println!("the output is {:?} and the token is {auth_str}",out_put);
                 out_put

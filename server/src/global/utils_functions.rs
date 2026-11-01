@@ -1,8 +1,8 @@
 use argon2::password_hash::{PasswordHash, PasswordHasher, SaltString};
 use argon2::{Algorithm, Argon2, Params, PasswordVerifier, Version};
-use rand::{rngs::OsRng,RngCore};
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+use rand::{RngCore, rngs::OsRng};
 use std::time::{SystemTime, UNIX_EPOCH};
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 
 fn argon2_instance() -> Argon2<'static> {
     let params = Params::new(
@@ -46,7 +46,7 @@ pub fn current_time() -> u64 {
         .as_millis() as u64
 }
 
-pub fn genarate_token_auth() -> String{
+pub fn genarate_token_auth() -> String {
     let mut bytes = [0u8; 32]; // 256 bits
     OsRng.fill_bytes(&mut bytes);
     URL_SAFE_NO_PAD.encode(bytes)

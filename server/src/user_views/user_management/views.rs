@@ -1,20 +1,21 @@
-
 use super::super::response;
-use super::super::types::{ApiResponse, AuthUser, RespMessage};
+use super::super::types::{ApiResponse, RespMessage};
 use crate::state::AppState;
-use axum::{Extension, extract::{State,Path}, http::StatusCode};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+};
 use std::collections::HashMap;
 
 pub(super) async fn __get_all_user_list(
     State(db_state): State<AppState>,
-    Extension(auth_user): Extension<AuthUser>,
-)-> Result<ApiResponse<Vec<response::UserList>>,(StatusCode, RespMessage)> {
-    
+    // Extension(auth_user): Extension<AuthUser>,
+) -> Result<ApiResponse<Vec<response::UserList>>, (StatusCode, RespMessage)> {
     // get list of all users except current user
     let user_row = sqlx::query_as::<_, response::UserList>(
-        "SELECT id,username,email,joined_date,is_admin FROM users where id != $1",
+        "SELECT id,username,email,joined_date,is_admin FROM users",
     )
-    .bind(auth_user.user_id)
+    // .bind(auth_user.user_id)
     .fetch_all(&db_state.db)
     .await
     .unwrap();
@@ -24,7 +25,7 @@ pub(super) async fn __get_all_user_list(
 pub(super) async fn __get_user_permissions(
     State(db_state): State<AppState>,
     Path(target_user_id): Path<i64>,
-) -> Result<ApiResponse<response::UserPermissionsResponse>,(StatusCode, RespMessage)> {
+) -> Result<ApiResponse<response::UserPermissionsResponse>, (StatusCode, RespMessage)> {
     // 1. base node access
     let nodes: Vec<(i64, bool)> = sqlx::query_as(
         "SELECT node_id, is_full_access
@@ -33,7 +34,8 @@ pub(super) async fn __get_user_permissions(
     )
     .bind(target_user_id)
     .fetch_all(&db_state.db)
-    .await.unwrap();
+    .await
+    .unwrap();
 
     // 2. metrics
     let metrics: Vec<(i64, String)> = sqlx::query_as(
@@ -43,7 +45,8 @@ pub(super) async fn __get_user_permissions(
     )
     .bind(target_user_id)
     .fetch_all(&db_state.db)
-    .await.unwrap();
+    .await
+    .unwrap();
 
     // 3. services — join through service_monitor to know which node each belongs to
     let services: Vec<(i64, i64)> = sqlx::query_as(
@@ -54,18 +57,22 @@ pub(super) async fn __get_user_permissions(
     )
     .bind(target_user_id)
     .fetch_all(&db_state.db)
-    .await.unwrap();
+    .await
+    .unwrap();
 
     // merge everything keyed by node_id
     let mut map: HashMap<i64, response::NodePermissionView> = nodes
         .into_iter()
         .map(|(node_id, is_full_access)| {
-            (node_id, response::NodePermissionView {
+            (
                 node_id,
-                is_full_access,
-                metrix: Vec::new(),
-                services: Vec::new(),
-            })
+                response::NodePermissionView {
+                    node_id,
+                    is_full_access,
+                    metrix: Vec::new(),
+                    services: Vec::new(),
+                },
+            )
         })
         .collect();
 
@@ -87,4 +94,3 @@ pub(super) async fn __get_user_permissions(
 
     Ok(ApiResponse { data: resp })
 }
-

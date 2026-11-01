@@ -55,5 +55,5 @@ impl std::fmt::Display for Metrixs {
 #[derive(Debug)]
 pub enum PermissionData<T> {
     IsAdmin,
-    Data(Vec<T>)
+    Data(Vec<T>),
 }

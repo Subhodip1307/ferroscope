@@ -1,34 +1,38 @@
+use super::auth_permission;
 use super::payloads;
 use super::response as get_payload;
+use super::types::{AuthUser, Metrixs, PermissionData};
 use crate::state::AppState;
 use crate::user_views::types;
 use axum::{
     Json,
-    extract::{Query, State,Extension},
+    extract::{Extension, Query, State},
     http::StatusCode,
 };
 use chrono::{DateTime, Utc};
 use sqlx::Row;
 use std::collections::HashMap;
-use super::auth_permission;
-use super::types::{AuthUser,PermissionData,Metrixs};
 
 pub(super) async fn __get_node_list(
     State(db_state): State<AppState>,
     Extension(auth_user): Extension<AuthUser>,
 ) -> Result<(StatusCode, Json<Vec<get_payload::NodesList>>), StatusCode> {
-    let check_permission=auth_permission::get_allowed_nodes_list(&db_state.db,auth_user.user_id).await;
+    let check_permission =
+        auth_permission::get_allowed_nodes_list(&db_state.db, auth_user.user_id).await;
 
-    let (is_admin,data) = match check_permission {
-        PermissionData::IsAdmin=>(true,vec![]),
-        PermissionData::Data(d)=>(false,d)
+    let (is_admin, data) = match check_permission {
+        PermissionData::IsAdmin => (true, vec![]),
+        PermissionData::Data(d) => (false, d),
     };
-    let rows: Vec<get_payload::NodesList> = sqlx::query_as("SELECT id,name FROM nodes WHERE $1 = true OR  id = ANY($2) ")
-        .bind(is_admin)
-        .bind(data)
-        .fetch_all(&db_state.db)
-        .await
-        .unwrap();
+    // println!("load data info {} {:?}", is_admin, data);
+
+    let rows: Vec<get_payload::NodesList> =
+        sqlx::query_as("SELECT id,name FROM nodes WHERE $1 = true OR  id = ANY($2) ")
+            .bind(is_admin)
+            .bind(data)
+            .fetch_all(&db_state.db)
+            .await
+            .unwrap();
     Ok((StatusCode::OK, Json(rows)))
 }
 
@@ -38,8 +42,14 @@ pub(super) async fn __get_nodeinfo(
     Query(params): Query<payloads::IdQuery>,
     Extension(auth_user): Extension<AuthUser>,
 ) -> Result<(StatusCode, Json<get_payload::SysInfo>), StatusCode> {
-    if !auth_permission::check_permission_on_single_node(&db_state.db, params.node,auth_user.user_id ).await{
-       return Err(StatusCode::NO_CONTENT);
+    if !auth_permission::check_permission_on_single_node(
+        &db_state.db,
+        params.node,
+        auth_user.user_id,
+    )
+    .await
+    {
+        return Err(StatusCode::NO_CONTENT);
     }
 
     let row = sqlx::query_as::<_,get_payload::SysInfo>(
@@ -60,9 +70,13 @@ pub(super) async fn __get_latest_cpu(
     Extension(auth_user): Extension<AuthUser>,
     Query(params): Query<payloads::IdQuery>,
 ) -> Result<(StatusCode, Json<get_payload::LatestCpu>), StatusCode> {
-    let check_permission=auth_permission::check_node_metrix_permission(
-        &db_state.db,params.node,auth_user.user_id,Metrixs::CPU
-    ).await;
+    let check_permission = auth_permission::check_node_metrix_permission(
+        &db_state.db,
+        params.node,
+        auth_user.user_id,
+        Metrixs::CPU,
+    )
+    .await;
 
     let row = sqlx::query(
         "SELECT value,date_time FROM cpu_stats where $2 = true AND node_id = $1 ORDER BY date_time DESC LIMIT 1",
@@ -89,9 +103,13 @@ pub(super) async fn __get_latest_ram(
     Extension(auth_user): Extension<AuthUser>,
     Query(params): Query<payloads::IdQuery>,
 ) -> Result<(StatusCode, Json<get_payload::LatestRam>), StatusCode> {
-    let check_permission=auth_permission::check_node_metrix_permission(
-        &db_state.db,params.node,auth_user.user_id,Metrixs::CPU
-    ).await;
+    let check_permission = auth_permission::check_node_metrix_permission(
+        &db_state.db,
+        params.node,
+        auth_user.user_id,
+        Metrixs::CPU,
+    )
+    .await;
 
     let value = sqlx::query(
         "SELECT free,total,date_time FROM memory_metrics WHERE $2 = true AND node_id = $1 ORDER BY date_time DESC LIMIT 1",
@@ -120,11 +138,16 @@ pub(super) async fn __get_latest_ram(
 pub(super) async fn __get_latest_cpu_hisotry(
     State(db_state): State<AppState>,
     Query(params): Query<payloads::IdQuery>,
-     Extension(auth_user): Extension<AuthUser>,
+    Extension(auth_user): Extension<AuthUser>,
 ) -> (StatusCode, Json<Vec<get_payload::LatestCpu>>) {
     if !auth_permission::check_node_metrix_permission(
-        &db_state.db,params.node,auth_user.user_id,Metrixs::CPU
-    ).await{
+        &db_state.db,
+        params.node,
+        auth_user.user_id,
+        Metrixs::CPU,
+    )
+    .await
+    {
         return (StatusCode::FORBIDDEN, Json(Vec::default()));
     };
     let row: Vec<get_payload::LatestCpu> = sqlx::query_as(
@@ -140,11 +163,16 @@ pub(super) async fn __get_latest_cpu_hisotry(
 pub(super) async fn __get_latest_ram_hisotry(
     State(db_state): State<AppState>,
     Query(params): Query<payloads::IdQuery>,
-     Extension(auth_user): Extension<AuthUser>,
+    Extension(auth_user): Extension<AuthUser>,
 ) -> (StatusCode, Json<Vec<get_payload::LatestRam>>) {
     if !auth_permission::check_node_metrix_permission(
-        &db_state.db,params.node,auth_user.user_id,Metrixs::RAM
-    ).await{
+        &db_state.db,
+        params.node,
+        auth_user.user_id,
+        Metrixs::RAM,
+    )
+    .await
+    {
         return (StatusCode::FORBIDDEN, Json(Vec::default()));
     };
     let row:Vec<get_payload::LatestRam> = sqlx::query_as(
@@ -165,13 +193,17 @@ pub(super) async fn __get_all_service_of_node(
     StatusCode,
     Json<HashMap<String, Vec<get_payload::ServiceList>>>,
 ) {
-    let check_permission=auth_permission::check_node_allowed_services_with_node_id(&db_state.db,params.node,auth_user.user_id).await;
+    let check_permission = auth_permission::check_node_allowed_services_with_node_id(
+        &db_state.db,
+        params.node,
+        auth_user.user_id,
+    )
+    .await;
 
-    let (is_admin,data) = match check_permission {
-        PermissionData::IsAdmin=>(true,vec![]),
-        PermissionData::Data(d)=>(false,d)
+    let (is_admin, data) = match check_permission {
+        PermissionData::IsAdmin => (true, vec![]),
+        PermissionData::Data(d) => (false, d),
     };
-
 
     let rows: Vec<get_payload::ServiceList> = sqlx::query_as(
         "SELECT service_name,category,ssl_exp FROM service_monitor where node_id = $1 AND ( true = $2 OR id ANY( $3 ) )",
@@ -199,7 +231,7 @@ pub(super) async fn __get_all_service_of_node(
 // )-> (
 //     StatusCode,
 //     Json<Vec<String>>,
-// ) 
+// )
 // {
 //     let rows: Vec<String> = sqlx::query_scalar(
 //         "SELECT service_name FROM service_monitor where node_id = $1",
@@ -214,14 +246,21 @@ pub(super) async fn __get_all_service_of_node(
 
 pub(super) async fn __get_single_service_current_status(
     State(db_state): State<AppState>,
-     Extension(auth_user): Extension<AuthUser>,
+    Extension(auth_user): Extension<AuthUser>,
     Json(payload): Json<payloads::ServiceQuery>,
 ) -> Result<(StatusCode, Json<get_payload::SingleServiceStatus>), StatusCode> {
     // will get node id and service name from query parameter or from json payload then the responce will be returnd
     // remove this Unreachable and Reachable logic it's wrong
-     if !auth_permission::check_node_allowed_services_with_node_id_service_name(&db_state.db,payload.node,auth_user.user_id,&payload.service_name).await {
+    if !auth_permission::check_node_allowed_services_with_node_id_service_name(
+        &db_state.db,
+        payload.node,
+        auth_user.user_id,
+        &payload.service_name,
+    )
+    .await
+    {
         return Err(StatusCode::NO_CONTENT);
-     }   
+    }
     let row = sqlx::query(
         "SELECT  error_msg,status,category,ssl_exp
          FROM service_monitor where node_id = $1 and service_name= $2",
@@ -257,11 +296,16 @@ pub(super) async fn __get_service_current_status(
     StatusCode,
     Json<HashMap<String, Vec<get_payload::ServiceStatus>>>,
 ) {
-    let check_permission=auth_permission::check_node_allowed_services_with_node_id(&db_state.db,params.node,auth_user.user_id).await;
+    let check_permission = auth_permission::check_node_allowed_services_with_node_id(
+        &db_state.db,
+        params.node,
+        auth_user.user_id,
+    )
+    .await;
 
-    let (is_admin,data) = match check_permission {
-        PermissionData::IsAdmin=>(true,vec![]),
-        PermissionData::Data(d)=>(false,d)
+    let (is_admin, data) = match check_permission {
+        PermissionData::IsAdmin => (true, vec![]),
+        PermissionData::Data(d) => (false, d),
     };
 
     let rows = sqlx::query_as::<_, get_payload::ServiceStatus>(
@@ -300,23 +344,33 @@ pub(super) async fn __get_nodes_with_services(
     State(db_state): State<AppState>,
     Extension(auth_user): Extension<AuthUser>,
     Json(nodes_ids): Json<payloads::MutiIdQuery>,
-) -> Result<types::ApiResponse<Vec<get_payload::NodeWithServices>>, (StatusCode, types::RespMessage)> {
+) -> Result<types::ApiResponse<Vec<get_payload::NodeWithServices>>, (StatusCode, types::RespMessage)>
+{
     // admin only
-    if !auth_permission::user_is_admin(&db_state.db,auth_user.user_id).await{
-        return  Err((StatusCode::FORBIDDEN,types::RespMessage { res: false, msg: "Admin Only API" }));
+    if !auth_permission::user_is_admin(&db_state.db, auth_user.user_id).await {
+        return Err((
+            StatusCode::FORBIDDEN,
+            types::RespMessage {
+                res: false,
+                msg: "Admin Only API",
+            },
+        ));
     }
     // get services list with nodes input
     // TODO: check for admin
     // 1. all nodes (id + name)
     let nodes: Vec<(i64, String)> =
         sqlx::query_as("SELECT id, name FROM nodes WHERE id = ANY($1) ORDER BY id")
-        .bind(&nodes_ids.obj_ids)
+            .bind(&nodes_ids.obj_ids)
             .fetch_all(&db_state.db)
             .await
             .map_err(|_| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                   types::RespMessage { res: false, msg: "Database error." },
+                    types::RespMessage {
+                        res: false,
+                        msg: "Database error.",
+                    },
                 )
             })?;
 
@@ -328,7 +382,10 @@ pub(super) async fn __get_nodes_with_services(
             .map_err(|_| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                   types::RespMessage { res: false, msg: "Database error." },
+                    types::RespMessage {
+                        res: false,
+                        msg: "Database error.",
+                    },
                 )
             })?;
 

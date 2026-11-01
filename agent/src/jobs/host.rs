@@ -1,7 +1,7 @@
 use serde_json::json;
 // Executor
 use super::config_reader::load_config;
-use super::structures::{BaseFormat, Host};
+use super::structures::{BaseFormat, Host,Recovery};
 use crate::Payload;
 use crate::set_up::BaseConFig;
 use arc_swap::ArcSwap;
@@ -19,6 +19,7 @@ pub(super) async fn host_runner(
     api_queue: tokio::sync::mpsc::Sender<Payload>,
     config: Arc<BaseConFig>,
     all_files: Arc<ArcSwap<Vec<String>>>,
+    fallback_sender: tokio::sync::mpsc::Sender<Recovery>,
 ) {
     let baseapi = config.get_service_url();
     let all_files_snapshorts = all_files.load();
@@ -49,6 +50,12 @@ pub(super) async fn host_runner(
                     status: if host_status {
                         "up".to_string()
                     } else {
+                         if let (Some(file),Some(hash))=(value.recovery_file_path,value.recover_file_256_hash){
+                                    fallback_sender.send(Recovery{
+                                    file:file,hash:hash
+                                    }).await.unwrap();
+                            };
+                        
                         "down".to_string()
                     },
                     error_msg: "".to_string(),

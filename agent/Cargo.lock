@@ -365,6 +365,7 @@ dependencies = [
  "anyhow",
  "arc-swap",
  "config",
+ "hex",
  "procfs",
  "reqwest",
  "rustls",

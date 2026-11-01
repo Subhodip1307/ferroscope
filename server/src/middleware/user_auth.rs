@@ -22,12 +22,13 @@ pub async fn user_auth(
         let out_put: (bool, i64) = match db_state.cache.get(&cache_key) {
             Some(value) => (true, value),
             None => {
-                let fetch_data = sqlx::query_scalar::<_,i64>("SELECT user_id FROM auth_tokens where token=$1")
-                    .persistent(true)
-                    .bind(auth_str)
-                    .fetch_optional(&db_state.db)
-                    .await
-                    .unwrap();
+                let fetch_data =
+                    sqlx::query_scalar::<_, i64>("SELECT user_id FROM auth_tokens where token=$1")
+                        .persistent(true)
+                        .bind(auth_str)
+                        .fetch_optional(&db_state.db)
+                        .await
+                        .unwrap();
                 let out_put: (bool, i64) = match fetch_data {
                     Some(value) => {
                         // setting the cache

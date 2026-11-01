@@ -1,9 +1,9 @@
+use super::auth_permission::user_is_admin;
 use super::payloads;
 use super::response as get_payload;
 use super::types::AuthUser;
 use crate::state::AppState;
 use axum::{Extension, Json, extract::State, http::StatusCode};
-
 
 pub(super) async fn __create_node(
     State(db_state): State<AppState>,
@@ -28,9 +28,12 @@ pub(super) async fn __create_node(
 
 pub(super) async fn __remove_node(
     State(db_state): State<AppState>,
+    Extension(auth_user): Extension<AuthUser>,
     Json(params): Json<payloads::IdQuery>,
 ) -> StatusCode {
-    println!("runing");
+    if !user_is_admin(&db_state.db, auth_user.user_id).await {
+        return StatusCode::FORBIDDEN;
+    };
     let _ = sqlx::query("delete from nodes where id =$1")
         .bind(params.node)
         .execute(&db_state.db)
